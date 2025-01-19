@@ -7,8 +7,12 @@ import os
 
 
 def load_config():
-    with open("config.json", "r") as f:
-        return json.load(f)
+    try:
+        with open("config.json", "r") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading config: {e}")
+        return {}
 
 
 def authenticate_youtube_api(api_key):
@@ -21,15 +25,20 @@ def get_video_comments(video_id, max_retries=5):
     url = f"https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}"
     retries = 0
     while retries < max_retries:
-        response = requests.get(url)
-        if response.status_code == 200:
-            comments = response.json().get("items", [])
-            return comments
-        elif response.status_code == 403:
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                comments = response.json().get("items", [])
+                return comments
+            elif response.status_code == 403:
+                retries += 1
+                time.sleep(2**retries)
+            else:
+                return []
+        except Exception as e:
+            print(f"Error getting comments: {e}")
             retries += 1
             time.sleep(2**retries)
-        else:
-            return []
     return []
 
 
@@ -39,15 +48,20 @@ def get_video_metadata(video_id, max_retries=5):
     url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id={video_id}&key={api_key}"
     retries = 0
     while retries < max_retries:
-        response = requests.get(url)
-        if response.status_code == 200:
-            metadata = response.json().get("items", [])
-            return metadata
-        elif response.status_code == 403:
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                metadata = response.json().get("items", [])
+                return metadata
+            elif response.status_code == 403:
+                retries += 1
+                time.sleep(2**retries)
+            else:
+                return []
+        except Exception as e:
+            print(f"Error getting metadata: {e}")
             retries += 1
             time.sleep(2**retries)
-        else:
-            return []
     return []
 
 
@@ -58,6 +72,7 @@ def get_video_transcript(video_id, max_retries=5):
             transcript = YouTubeTranscriptApi.get_transcript(video_id)
             return transcript
         except Exception as e:
+            print(f"Error getting transcript: {e}")
             retries += 1
             time.sleep(2**retries)
     return []

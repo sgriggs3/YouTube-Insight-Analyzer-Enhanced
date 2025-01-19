@@ -4,7 +4,9 @@ import { server as WebSocketServer } from 'websocket';
 const app = express();
 const port = process.env.PORT || 8080;
 
-app.get('/', (req, res) => {
+import { Request, Response } from 'express';
+
+app.get('/', (req: Request, res: Response) => {
   res.send('YouTube Insight Analyzer Enhanced');
 });
 
@@ -19,7 +21,7 @@ const wsServer = new WebSocketServer({
 
 export { app, wsServer };
 
-app.get('/api/opinion', (req, res) => {
+app.get('/api/opinion', (req: Request, res: Response) => {
   // Placeholder for opinion prediction API endpoint
   res.send({ message: 'Opinion prediction API endpoint not yet implemented' });
 });

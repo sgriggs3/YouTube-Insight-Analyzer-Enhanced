@@ -22,8 +22,12 @@ import json
 
 
 def load_config():
-    with open("config.json", "r") as f:
-        return json.load(f)
+    try:
+        with open("config.json", "r") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"Error loading config: {e}")
+        return {}
 
 
 # Initialize VADER sentiment analyzer
@@ -70,7 +74,14 @@ def preprocess_comment(comment):
     tokens = [word for word in tokens if word not in stopwords.words("english")]
 
     # Correct spelling
-    tokens = [spell.correction(word) for word in tokens]
+    corrected_tokens = []
+    for word in tokens:
+        corrected_word = spell.correction(word)
+        if corrected_word:
+            corrected_tokens.append(corrected_word)
+        else:
+            corrected_tokens.append(word)
+    tokens = corrected_tokens
 
     # Lemmatize and stem the tokens
     tokens = [lemmatizer.lemmatize(stemmer.stem(word)) for word in tokens]
@@ -206,8 +217,11 @@ def categorize_comments_by_themes(texts, text_type="comment"):
         )
 
     # Hierarchical clustering
-    clustering = AgglomerativeClustering(n_clusters=5)
-    clusters = clustering.fit_predict(embeddings)
+    if len(embeddings) > 1:
+        clustering = AgglomerativeClustering(n_clusters=5)
+        clusters = clustering.fit_predict(embeddings)
+    else:
+        clusters = []
 
     return {
         "lda_topics": lda_topics,
@@ -350,31 +364,7 @@ def generate_dynamic_suggestions(sentiment_data):
                 f"Identified {len(significant_shifts)} comments with significant sentiment shifts."
             )
 
-
-# Example suggestion: Identify potential manipulation or bias
-if (
-    "sentiment_shift" in sentiment_data.columns
-    and "sentiment_echo_chamber" in sentiment_data.columns
-):
-    biased_comments = sentiment_data[
-        (sentiment_data["sentiment_shift"].abs() > 0.3)
-        & (sentiment_data["sentiment_echo_chamber"] == True)
-    ]
-    if not biased_comments.empty:
-        suggestions.append(
-            f"Identified {len(biased_comments)} comments with significant sentiment shifts within echo chambers, which may indicate potential manipulation or bias."
-        )
-
-# Example suggestion: Identify potential echo chambers
-if "sentiment_echo_chamber" in sentiment_data.columns:
-    echo_chamber_comments = sentiment_data[
-        sentiment_data["sentiment_echo_chamber"] == True
-    ]
-    if not echo_chamber_comments.empty:
-        suggestions.append(
-            f"Identified {len(echo_chamber_comments)} comments within potential echo chambers."
-        )
-
+    # Example suggestion: Identify potential manipulation or bias
     def detect_toxic_comments(self, text_inputs):
         results = []
         for text in text_inputs:

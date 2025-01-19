@@ -7,14 +7,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
-    "rootDir": "./src",
     "types": [
       "node",
       "jest",
       "mocha"
-    ],
-    "typeRoots": [
-      "./node_modules/@types"
     ],
     "lib": [
       "es6",
@@ -22,7 +18,7 @@
     ]
   },
   "include": [
-    "src/**/*"
+    "./**/*"
   ],
   "exclude": [
     "node_modules"

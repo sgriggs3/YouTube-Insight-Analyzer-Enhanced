@@ -1,5 +1,5 @@
 {
-  "youtube_api_key": "",
+  "youtube_api_key": "AIzaSyDcj96a_Rp2gA1EBvU6XaH9_Cvma9ga3dk",
   "data_storage_path": "data",
   "sentiment_model": "vader",
   "web_ui_port": 5000

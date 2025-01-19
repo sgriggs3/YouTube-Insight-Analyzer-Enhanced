@@ -8,12 +8,19 @@ from wordcloud import WordCloud
 
 
 def visualize_sentiment_trends(sentiment_data, output_file):
-    sentiment_data["date"] = pd.to_datetime(sentiment_data["date"])
-    fig = px.line(
-        sentiment_data, x="date", y="sentiment", title="Sentiment Trends Over Time"
-    )
-    fig = add_tooltips(fig)
-    fig.write_html(output_file)
+    if not sentiment_data.empty:
+        sentiment_data["date"] = pd.to_datetime(sentiment_data["date"])
+        fig = px.line(
+            sentiment_data,
+            x="date",
+            y=sentiment_data["vader_sentiment"].apply(lambda x: x["compound"]),
+            title="Sentiment Trends Over Time",
+        )
+        fig = add_tooltips(fig)
+        fig.write_html(output_file)
+    else:
+        with open(output_file, "w") as f:
+            f.write("No sentiment data to visualize.")
 
 
 def save_visualization_as_graph(data, filename):
