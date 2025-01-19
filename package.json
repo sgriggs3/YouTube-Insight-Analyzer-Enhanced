@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "express": "^4.21.2",
-    "websocket": "^1.0.34"
+    "websocket": "^1.0.34",
+    "vaderSentiment": "^3.3.2"
   }
 }
