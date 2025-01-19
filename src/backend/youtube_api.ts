@@ -1,3 +1,4 @@
+import { SentimentIntensityAnalyzer } from "vaderSentiment";
 import axios, { AxiosError } from "axios";
 
 interface Comment {
@@ -145,4 +146,21 @@ const saveComments = async (comments: Comment[]) => {
   }
 };
 
-export { fetchComments };
+import { getVideoMetadata } from "./video_metadata";
+
+const analyzeCommentSentiment = (comment: string) => {
+  // Basic sentiment analysis using VADER
+  // Replace with more advanced analysis in later iterations
+  const sentiment = SentimentIntensityAnalyzer().polarity_scores(comment);
+  let overallSentiment;
+  if (sentiment.compound >= 0.05) {
+    overallSentiment = "positive";
+  } else if (sentiment.compound <= -0.05) {
+    overallSentiment = "negative";
+  } else {
+    overallSentiment = "neutral";
+  }
+  return overallSentiment;
+};
+
+export { fetchComments, analyzeCommentSentiment };
