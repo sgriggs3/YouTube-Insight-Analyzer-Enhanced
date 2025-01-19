@@ -1,0 +1,36 @@
+name: "Main Branch Prebuild"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  prebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Dev Container
+        uses: microsoft/vscode-dev-containers/actions/setup@v1
+        with:
+          image: mcr.microsoft.com/vscode/devcontainers/python:3.9
+          devcontainer-json-path: .devcontainer/devcontainer.json  # Path to devcontainer.json
+
+      - name: Set up environment variables
+        run: |
+          echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> $GITHUB_ENV
+          echo "YOUTUBE_API_KEY=${{ secrets.YOUTUBE_API_KEY }}" >> $GITHUB_ENV  # Ensure YouTube API key is set securely
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+          python -m nltk.downloader punkt vader_lexicon
+          pip install google-api-python-client  # Ensure the YouTube API library is installed
+
+      - name: Start Dev Container (Optional)
+        run: |
+          flask run --host=0.0.0.0 --port=8080  # Only needed if you're running the server during prebuild

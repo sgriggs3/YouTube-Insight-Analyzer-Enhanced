@@ -1,0 +1,12 @@
+{
+  "name": "youtube-insight-analyzer-enhanced",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc -b ./src/tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/jest": "^29.0.0",
+    "@types/mocha": "^10.0.0"
+  }
+}

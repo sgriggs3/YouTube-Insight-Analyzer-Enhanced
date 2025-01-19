@@ -1,0 +1,29 @@
+{
+  "name": "YouTube Insight Analyzer",
+  "image": "mcr.microsoft.com/vscode/devcontainers/python:3.9",
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash",
+    "python.pythonPath": "/usr/local/bin/python"
+  },
+  "extensions": [
+    "ms-python.python",
+    "ms-toolsai.jupyter",
+    "streetsidesoftware.code-spell-checker",
+    "esbenp.prettier-vscode"
+  ],
+  "postCreateCommand": "pip install -r requirements.txt && python -m nltk.downloader punkt vader_lexicon",
+  "postStartCommand": "flask run --host=0.0.0.0 --port=8080",
+  "forwardPorts": [8080],
+  "containerEnv": {
+    "GEMINI_API_KEY": "${{ secrets.GEMINI_API_KEY }}"
+  },
+  "customizations": {
+    "codespaces": {
+      "prebuilds": {
+        "enabled": true,
+        "branches": ["main"],
+        "repository": true
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+requests
+pandas
+numpy
+matplotlib
+transformers
+youtube-transcript-api
+openai
+langchain
+plotly
+websockets
