@@ -37,44 +37,50 @@ spell = SpellChecker()
 lemmatizer = WordNetLemmatizer()
 stemmer = PorterStemmer()
 
+
 def preprocess_comment(comment):
     # Lowercase the comment
     comment = comment.lower()
-    
+
     # Remove special characters and punctuation
     comment = re.sub(r'[^a-zA-Z\s]', '', comment)
-    
+
     # Tokenize the comment
     tokens = comment.split()
-    
+
     # Remove stop-words
-    tokens = [word for word in tokens if word not in stopwords.words('english')]
-    
+    tokens = [
+        word for word in tokens if word not in stopwords.words('english')]
+
     # Correct spelling
     tokens = [spell.correction(word) for word in tokens]
-    
+
     # Lemmatize and stem the tokens
     tokens = [lemmatizer.lemmatize(stemmer.stem(word)) for word in tokens]
-    
+
     # Handle negations
-    tokens = ['not_' + word if word in ['not', 'never', 'no'] else word for word in tokens]
-    
+    tokens = ['not_' + word if word in ['not', 'never', 'no']
+              else word for word in tokens]
+
     return ' '.join(tokens)
+
 
 def perform_sentiment_analysis(comments):
     results = []
     for comment in comments:
         preprocessed_comment = preprocess_comment(comment)
-        
+
         vader_result = vader_analyzer.polarity_scores(preprocessed_comment)
         hf_result = hf_analyzer(preprocessed_comment)[0]
-        
+
         # BERT sentiment analysis
-        inputs = bert_tokenizer(preprocessed_comment, return_tensors='pt', truncation=True, padding=True)
+        inputs = bert_tokenizer(
+            preprocessed_comment, return_tensors='pt', truncation=True, padding=True)
         outputs = bert_model(**inputs)
         probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
-        bert_result = {'label': 'positive' if probs[0][1] > probs[0][0] else 'negative', 'score': probs[0][1].item() if probs[0][1] > probs[0][0] else probs[0][0].item()}
-        
+        bert_result = {'label': 'positive' if probs[0][1] > probs[0][0] else 'negative', 'score': probs[0][1].item(
+        ) if probs[0][1] > probs[0][0] else probs[0][0].item()}
+
         results.append({
             "comment": comment,
             "preprocessed_comment": preprocessed_comment,
@@ -84,78 +90,144 @@ def perform_sentiment_analysis(comments):
         })
     return pd.DataFrame(results)
 
+
 def categorize_comments_by_themes(comments):
     # Preprocess comments
-    preprocessed_comments = [preprocess_comment(comment) for comment in comments]
-    
+    preprocessed_comments = [preprocess_comment(
+        comment) for comment in comments]
+
     # Convert comments to contextual embeddings
     embeddings = sentence_model.encode(preprocessed_comments)
-    
+
     # Topic modeling using LDA
     vectorizer = CountVectorizer()
     X = vectorizer.fit_transform(preprocessed_comments)
     lda = LatentDirichletAllocation(n_components=5, random_state=42)
     lda_topics = lda.fit_transform(X)
-    
+
     # Topic modeling using NMF
     nmf = NMF(n_components=5, random_state=42)
     nmf_topics = nmf.fit_transform(X)
-    
+
     # Hierarchical clustering
     clustering = AgglomerativeClustering(n_clusters=5)
     clusters = clustering.fit_predict(embeddings)
-    
+
     return {
         "lda_topics": lda_topics,
         "nmf_topics": nmf_topics,
         "clusters": clusters
     }
 
+
 def incorporate_user_feedback(feedback_data, sentiment_data):
     for feedback in feedback_data:
         comment_id = feedback['comment_id']
         corrected_sentiment = feedback['corrected_sentiment']
-        sentiment_data.loc[sentiment_data['comment_id'] == comment_id, 'corrected_sentiment'] = corrected_sentiment
+        sentiment_data.loc[sentiment_data['comment_id'] ==
+                           comment_id, 'corrected_sentiment'] = corrected_sentiment
+    sentiment_data.to_csv('sentiment_data.csv', index=False)
     return sentiment_data
+
 
 def calculate_sentiment_intensity(sentiment_data):
-    sentiment_data['sentiment_intensity'] = sentiment_data.apply(lambda row: row['vader_sentiment']['compound'], axis=1)
+    sentiment_data['sentiment_intensity'] = sentiment_data.apply(
+        lambda row: row['vader_sentiment']['compound'], axis=1)
     return sentiment_data
+
 
 def calculate_sentiment_variance(sentiment_data):
-    sentiment_data['sentiment_variance'] = sentiment_data['sentiment_intensity'].rolling(window=10).var()
+    sentiment_data['sentiment_variance'] = sentiment_data['sentiment_intensity'].rolling(
+        window=10).var()
     return sentiment_data
+
 
 def calculate_sentiment_correlation(sentiment_data, other_data):
-    sentiment_data['sentiment_correlation'] = sentiment_data['sentiment_intensity'].rolling(window=10).corr(other_data)
+    sentiment_data['sentiment_correlation'] = sentiment_data['sentiment_intensity'].rolling(
+        window=10).corr(other_data)
     return sentiment_data
 
+
 def calculate_sentiment_clustering(sentiment_data):
-    embeddings = sentence_model.encode(sentiment_data['preprocessed_comment'].tolist())
+    embeddings = sentence_model.encode(
+        sentiment_data['preprocessed_comment'].tolist())
     clustering = AgglomerativeClustering(n_clusters=5)
     sentiment_data['sentiment_cluster'] = clustering.fit_predict(embeddings)
     return sentiment_data
 
+
 def calculate_sentiment_propagation(sentiment_data):
-    sentiment_data['sentiment_propagation'] = sentiment_data['sentiment_intensity'].diff().abs()
+    sentiment_data['sentiment_propagation'] = sentiment_data['sentiment_intensity'].diff(
+    ).abs()
     return sentiment_data
 
+
 def calculate_sentiment_echo_chambers(sentiment_data):
-    sentiment_data['sentiment_echo_chamber'] = sentiment_data['sentiment_cluster'].rolling(window=10).apply(lambda x: len(set(x)) == 1)
+    sentiment_data['sentiment_echo_chamber'] = sentiment_data['sentiment_cluster'].rolling(
+        window=10).apply(lambda x: len(set(x)) == 1)
     return sentiment_data
+
 
 def calculate_sentiment_shifts(sentiment_data):
     sentiment_data['sentiment_shift'] = sentiment_data['sentiment_intensity'].diff()
     return sentiment_data
 
+
 def calculate_sentiment_spikes(sentiment_data):
-    sentiment_data['sentiment_spike'] = sentiment_data['sentiment_intensity'].diff().abs() > 0.5
+    sentiment_data['sentiment_spike'] = sentiment_data['sentiment_intensity'].diff(
+    ).abs() > 0.5
     return sentiment_data
+
 
 def calculate_sentiment_engagement(sentiment_data, engagement_data):
     sentiment_data['sentiment_engagement'] = engagement_data
     return sentiment_data
 
+
 def calculate_sentiment_influence(sentiment_data, influence_data):
     sentiment_data['sentiment_influence'] = influence_data
     return sentiment_data
+
+
+def generate_dynamic_suggestions(sentiment_data):
+    suggestions = []
+    if sentiment_data.empty:
+        return suggestions
+
+    # Example suggestion: Identify comments with high negative sentiment
+    negative_comments = sentiment_data[sentiment_data['vader_sentiment'].apply(
+        lambda x: x['compound'] < -0.5)]
+    if not negative_comments.empty:
+        suggestions.append(
+            f"Identified {len(negative_comments)} comments with high negative sentiment.")
+
+    # Example suggestion: Identify comments with high positive sentiment
+    positive_comments = sentiment_data[sentiment_data['vader_sentiment'].apply(
+        lambda x: x['compound'] > 0.5)]
+    if not positive_comments.empty:
+        suggestions.append(
+            f"Identified {len(positive_comments)} comments with high positive sentiment.")
+
+    # Example suggestion: Identify comments with neutral sentiment
+    neutral_comments = sentiment_data[sentiment_data['vader_sentiment'].apply(
+        lambda x: abs(x['compound']) <= 0.1)]
+    if not neutral_comments.empty:
+        suggestions.append(
+            f"Identified {len(neutral_comments)} comments with neutral sentiment.")
+
+    # Example suggestion: Identify comments with high variance in sentiment
+    if 'sentiment_variance' in sentiment_data.columns:
+        high_variance_comments = sentiment_data[sentiment_data['sentiment_variance'] > 0.2]
+        if not high_variance_comments.empty:
+            suggestions.append(
+                f"Identified {len(high_variance_comments)} comments with high variance in sentiment.")
+
+    # Example suggestion: Identify comments with sentiment shifts
+    if 'sentiment_shift' in sentiment_data.columns:
+        significant_shifts = sentiment_data[sentiment_data['sentiment_shift'].abs(
+        ) > 0.3]
+        if not significant_shifts.empty:
+            suggestions.append(
+                f"Identified {len(significant_shifts)} comments with significant sentiment shifts.")
+
+    return suggestions

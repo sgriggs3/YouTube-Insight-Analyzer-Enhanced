@@ -1,0 +1,25 @@
+name: "Main Branch Prebuild"
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  prebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Install Python Dependencies
+        run: |
+          pip install -r requirements.txt
+          python -m nltk.downloader punkt vader_lexicon

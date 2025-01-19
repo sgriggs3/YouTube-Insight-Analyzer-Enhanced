@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Examples</title>
+</head>
+<body>
+    <h1>Examples</h1>
+    <p>This page will show examples of how to use the application.</p>
+    
+    <h2>Inputting URLs</h2>
+    <p>To input a URL for analysis, use the following endpoint:</p>
+    <pre>
+    POST /input-url
+    Content-Type: application/json
+
+    {
+      "url": "https://www.youtube.com/watch?v=example_video_id"
+    }
+    </pre>
+
+    <h2>Providing User Feedback</h2>
+    <p>To provide user feedback, use the following endpoint:</p>
+    <pre>
+    POST /user-feedback
+    Content-Type: application/json
+
+    {
+      "feedback": {
+        "comment_id": "example_comment_id",
+        "corrected_sentiment": "positive"
+      }
+    }
+    </pre>
+
+    <h2>Saving Data in CSV Format</h2>
+    <p>To save data in CSV format, use the following endpoint:</p>
+    <pre>
+    POST /save-csv
+    Content-Type: application/json
+
+    {
+      "data": [
+        {
+          "comment": "example_comment",
+          "vader_sentiment": {"neg": 0.1, "neu": 0.8, "pos": 0.1, "compound": 0.0},
+          "hf_sentiment": {"label": "neutral", "score": 0.8}
+        }
+      ],
+      "filename": "output.csv"
+    }
+    </pre>
+
+    <h2>Creating Heatmaps</h2>
+    <p>To create a heatmap of sentiment data, use the following endpoint:</p>
+    <pre>
+    GET /visualization/heatmap
+    </pre>
+
+    <h2>Creating Word Clouds</h2>
+    <p>To create a word cloud of comment data, use the following endpoint:</p>
+    <pre>
+    GET /visualization/wordcloud
+    </pre>
+
+    <h2>Creating Sentiment Distribution Charts</h2>
+    <p>To create a sentiment distribution chart, use the following endpoint:</p>
+    <pre>
+    GET /visualization/sentiment-distribution
+    </pre>
+
+    <h2>Real-Time Sentiment Trends</h2>
+    <p>To view real-time sentiment trends, use the following endpoint:</p>
+    <pre>
+    GET /real-time
+    </pre>
+
+    <h2>Filtering Data</h2>
+    <p>To filter sentiment data based on specific criteria, use the following endpoint:</p>
+    <pre>
+    POST /filter
+    Content-Type: application/json
+
+    {
+      "criteria": {
+        "date": "2023-01-01",
+        "sentiment": "positive"
+      }
+    }
+    </pre>
+</body>
+</html>
