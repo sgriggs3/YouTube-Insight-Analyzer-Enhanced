@@ -64,10 +64,18 @@ def visualize_filtered_data(data, criteria, output_file):
     visualize_sentiment_trends(filtered_data, output_file)
 
 
+import cachetools
+
+cache = cachetools.TTLCache(maxsize=100, ttl=3600)  # 1 hour cache
+
+
+@cachetools.cached(cache)
 def handle_large_volumes_of_data(data):
-    # Placeholder function to handle large volumes of data
-    # This function needs to be implemented with appropriate logic
-    pass
+    """Handles large volumes of data by downsampling."""
+    if len(data) > 10000:
+        logging.info("Downsampling data for visualization.")
+        data = data.sample(frac=0.1)  # Downsample to 10%
+    return data
 
 
 def visualize_large_volumes_of_data(data, output_file):
@@ -206,4 +214,117 @@ def visualize_philosophical_aspects(philosophical_data, output_file):
 def visualize_truth_and_objectivity(truth_data, output_file):
     fig = px.bar(truth_data, x="source_credibility", title="Credibility of Sources")
     fig = add_tooltips(fig)
+    fig.write_html(output_file)a
+
+from plotly.subplots import make_subplots
+
+
+def create_advanced_sentiment_visualization(data, output_file):
+    """Create advanced interactive sentiment visualization with multiple views."""
+    try:
+        # Handle empty data
+        if data.empty:
+            raise ValueError("No data available for visualization")
+
+        # Create subplots with error handling
+        try:
+            fig = make_subplots(
+                rows=2,
+                cols=2,
+                subplot_titles=(
+                    "Sentiment Over Time",
+                    "Comment Themes",
+                    "Sentiment Distribution",
+                    "Topic Evolution",
+                ),
+            )
+        except Exception as e:
+            print(f"Error creating subplots: {e}")
+            return None
+
+        # Add sentiment timeline with error handling
+        try:
+            fig.add_trace(
+                go.Scatter(
+                    x=data["date"],
+                    y=data["sentiment"],
+                    mode="lines+markers",
+                    name="Sentiment",
+                ),
+                row=1,
+                col=1,
+            )
+        except Exception as e:
+            print(f"Error adding sentiment timeline: {e}")
+
+        # Save visualization
+        try:
+            fig.write_html(output_file)
+        except Exception as e:
+            print(f"Error saving visualization: {e}")
+            return None
+
+    except Exception as e:
+        print(f"Error in visualization creation: {e}")
+        return None
+
+
+def detect_toxic_comments(self, text_inputs):
+    results = []
+    for text in text_inputs:
+        if isinstance(text, dict) and "text" in text:
+            input_text = text["text"]
+            input_type = text.get("type", "comment")
+        else:
+            input_text = text
+            input_type = "comment"
+
+        inputs = toxic_tokenizer(
+            input_text, return_tensors="pt", truncation=True, padding=True
+        )
+        with torch.no_grad():
+            outputs = toxic_model(**inputs)
+
+        probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
+        toxic_score = probs[0][1].item()
+
+        results.append(
+            {
+                "input_text": input_text,
+                "input_type": input_type,
+                "toxic_score": toxic_score,
+                "is_toxic": toxic_score > 0.5,
+            }
+        )
+    return pd.DataFrame(results)
+
+
+def visualize_user_engagement(data, output_file):
+    """Create visualization for user engagement patterns."""
+    fig = go.Figure()
+
+    # Add engagement metrics
+    fig.add_trace(
+        go.Scatter(x=data["date"], y=data["likes"], name="Likes", mode="lines+markers")
+    )
+
+    fig.add_trace(
+        go.Scatter(
+            x=data["date"], y=data["replies"], name="Replies", mode="lines+markers"
+        )
+    )
+
+    fig.update_layout(
+        title="User Engagement Over Time",
+        xaxis_title="Date",
+        yaxis_title="Count",
+        hovermode="x unified",
+    )
+
     fig.write_html(output_file)
+
+
+def create_topic_network(data, output_file):
+    """Create interactive network visualization of related topics."""
+    # Network visualization code here
+    pass

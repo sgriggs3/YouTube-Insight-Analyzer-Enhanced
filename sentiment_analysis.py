@@ -19,6 +19,11 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer, WordNetLemmatizer
 from spellchecker import SpellChecker
 import json
+from textblob import TextBlob
+from nltk.tokenize import sent_tokenize
+from typing import List, Dict, Any
+import logging
+import random
 
 
 def load_config():
@@ -83,10 +88,47 @@ def preprocess_comment(comment):
     return " ".join(tokens)
 
 
-def perform_sentiment_analysis(text_inputs, language="en"):
+def fine_tune_model(model, tokenizer, dataset, num_epochs=3):
+    """Fine-tunes a sentiment analysis model on a labeled dataset."""
+    model.train()
+    optimizer = torch.optim.AdamW(model.parameters(), lr=5e-5)
+    for epoch in range(num_epochs):
+        for item in dataset:
+            inputs = tokenizer(
+                item["text"], return_tensors="pt", truncation=True, padding=True
+            )
+            labels = torch.tensor(
+                1
+                if item["label"] == "positive"
+                else 0 if item["label"] == "negative" else 2
+            ).unsqueeze(0)
+            optimizer.zero_grad()
+            outputs = model(**inputs, labels=labels)
+            loss = outputs.loss
+            loss.backward()
+            optimizer.step()
+        logging.info(f"Epoch {epoch+1}/{num_epochs} completed.")
+    model.eval()
+    logging.info("Model fine-tuning complete.")
+
+
+def perform_sentiment_analysis(text_inputs, language="en", labeled_dataset=None):
     config = load_config()
     sentiment_model = config.get("sentiment_model", "vader")
     results = []
+
+    if not labeled_dataset:
+        logging.info("Generating synthetic dataset for fine-tuning.")
+        labeled_dataset = generate_synthetic_dataset()
+
+    if labeled_dataset:
+        logging.info("Fine-tuning model with labeled dataset.")
+        if sentiment_model == "bert":
+            fine_tune_model(bert_model, bert_tokenizer, labeled_dataset)
+        elif sentiment_model == "hf":
+            # Fine-tune the Hugging Face model (if possible)
+            logging.warning("Fine-tuning Hugging Face model is not implemented.")
+
     for text in text_inputs:
         if isinstance(text, dict) and "text" in text:
             input_text = text["text"]
@@ -375,6 +417,22 @@ if "sentiment_echo_chamber" in sentiment_data.columns:
             f"Identified {len(echo_chamber_comments)} comments within potential echo chambers."
         )
 
+
+def generate_synthetic_dataset(num_samples: int = 1000) -> List[Dict[str, Any]]:
+    """Generates a synthetic labeled dataset for sentiment analysis."""
+    labels = ["positive", "negative", "neutral"]
+    comments = []
+    for _ in range(num_samples):
+        label = random.choice(labels)
+        if label == "positive":
+            comment = "This is a great video!"
+        elif label == "negative":
+            comment = "This video is terrible."
+        else:
+            comment = "This video is okay."
+        comments.append({"text": comment, "label": label})
+    return comments
+
     def detect_toxic_comments(self, text_inputs):
         results = []
         for text in text_inputs:
@@ -436,3 +494,140 @@ if "sentiment_echo_chamber" in sentiment_data.columns:
         return {
             "truth_and_objectivity_analysis": "Truth and objectivity analysis not yet implemented"
         }
+
+
+class SentimentAnalyzer:
+    def __init__(self):
+        """Initialize sentiment analysis models"""
+        try:
+            self.sentiment_pipeline = pipeline(
+                "sentiment-analysis",
+                model="nlptown/bert-base-multilingual-uncased-sentiment",
+            )
+        except Exception as e:
+            logging.error(f"Error initializing sentiment pipeline: {e}")
+            self.sentiment_pipeline = None
+        # Download required NLTK data
+        nltk.download("punkt", quiet=True)
+        # Initialize transformers pipeline for more accurate sentiment analysis
+        self.sentiment_pipeline = pipeline("sentiment-analysis")
+        self.logger = logging.getLogger(__name__)
+
+    def analyze_text(self, text: str) -> Dict[str, Any]:
+        """Analyze sentiment of a single text."""
+        try:
+            if self.sentiment_pipeline:
+                result = self.sentiment_pipeline(text)[0]
+                return {
+                    "text": text,
+                    "label": result["label"],
+                    "score": result["score"],
+                }
+            else:
+                vader_result = vader_analyzer.polarity_scores(text)
+                return {
+                    "text": text,
+                    "label": (
+                        "POSITIVE"
+                        if vader_result["compound"] >= 0.05
+                        else (
+                            "NEGATIVE"
+                            if vader_result["compound"] <= -0.05
+                            else "NEUTRAL"
+                        )
+                    ),
+                    "score": vader_result["compound"],
+                }
+        except Exception as e:
+            logging.error(f"Error analyzing text: {e}")
+            return {"text": text, "label": "ERROR", "score": 0.0}
+
+    def analyze_comments(self, comments: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Analyze sentiment of multiple comments."""
+        results = []
+        overall_sentiment = {
+            "positive": 0,
+            "negative": 0,
+            "neutral": 0,
+            "avg_polarity": 0,
+            "avg_subjectivity": 0,
+        }
+
+        try:
+            texts = [comment["text"] for comment in comments]
+            sentiments = self.analyze_texts(texts)
+            for sentiment in sentiments:
+                results.append(sentiment)
+                if sentiment["label"] == "POSITIVE":
+                    overall_sentiment["positive"] += 1
+                elif sentiment["label"] == "NEGATIVE":
+                    overall_sentiment["negative"] += 1
+                else:
+                    overall_sentiment["neutral"] += 1
+                overall_sentiment["avg_polarity"] += sentiment["score"]
+            overall_sentiment["avg_polarity"] /= len(sentiments)
+        except Exception as e:
+            logging.error(f"Error analyzing comments: {e}")
+
+        return {"comments": results, "overall_sentiment": overall_sentiment}
+
+    def categorize_comments_by_themes(
+        self, comments: List[Dict[str, Any]]
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """Categorize comments by common themes/topics."""
+        themes = {}
+
+        try:
+            # Basic theme categorization - this could be enhanced with topic modeling
+            keywords = {
+                "technical": [
+                    "code",
+                    "bug",
+                    "error",
+                    "fix",
+                    "issue",
+                    "problem",
+                    "solution",
+                ],
+                "positive_feedback": [
+                    "great",
+                    "awesome",
+                    "amazing",
+                    "good",
+                    "love",
+                    "excellent",
+                ],
+                "negative_feedback": [
+                    "bad",
+                    "poor",
+                    "terrible",
+                    "hate",
+                    "awful",
+                    "worst",
+                ],
+                "suggestion": [
+                    "suggest",
+                    "improvement",
+                    "should",
+                    "could",
+                    "would",
+                    "maybe",
+                ],
+                "question": ["how", "what", "why", "when", "where", "who", "?"],
+            }
+
+            for comment in comments:
+                text = comment["text"].lower()
+
+                # Categorize comment based on keywords
+                for theme, words in keywords.items():
+                    if any(word in text for word in words):
+                        if theme not in themes:
+                            themes[theme] = []
+                        themes[theme].append(comment)
+
+            return themes
+
+        except Exception as e:
+            self.logger.error(f"Error categorizing comments: {e}")
+            raise

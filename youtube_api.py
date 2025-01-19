@@ -15,22 +15,55 @@ def authenticate_youtube_api(api_key):
     return {"Authorization": f"Bearer {api_key}"}
 
 
-def get_video_comments(video_id, max_retries=5):
+def get_video_comments(video_id, options=None):
     config = load_config()
     api_key = config.get("youtube_api_key")
-    url = f"https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}"
-    retries = 0
-    while retries < max_retries:
-        response = requests.get(url)
-        if response.status_code == 200:
-            comments = response.json().get("items", [])
-            return comments
-        elif response.status_code == 403:
-            retries += 1
-            time.sleep(2**retries)
-        else:
-            return []
-    return []
+    comments = []
+    next_page_token = None
+
+    # Default options
+    default_options = {"limit": 1000, "sort_by": "relevance", "include_replies": True}
+    options = {**default_options, **(options or {})}
+
+    while True:
+        try:
+            url = f"https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}&maxResults=100"
+            if next_page_token:
+                url += f"&pageToken={next_page_token}"
+
+            # Add sorting options
+            if options["sort_by"] == "time":
+                url += "&order=time"
+
+            response = requests.get(url)
+            if response.status_code == 200:
+                data = response.json()
+                comments.extend(data.get("items", []))
+
+                # Save progress
+                save_scraping_progress(video_id, len(comments), options["limit"])
+
+                next_page_token = data.get("nextPageToken")
+                if not next_page_token or len(comments) >= options["limit"]:
+                    break
+
+            elif response.status_code == 403:
+                handle_rate_limit()
+            else:
+                handle_error(response)
+                break
+
+        except Exception as e:
+            log_error(e)
+            break
+
+    return comments
+
+
+def save_scraping_progress(video_id, current_count, total):
+    """Save scraping progress to finished-tracks.txt"""
+    with open("finished-tracks.txt", "a") as f:
+        f.write(f"Video {video_id}: {current_count}/{total} comments scraped\n")
 
 
 def get_video_metadata(video_id, max_retries=5):

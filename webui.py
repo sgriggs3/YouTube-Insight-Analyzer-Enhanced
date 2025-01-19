@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -11,8 +11,24 @@ from data_visualization import start_websocket_server, real_time_visualization
 import asyncio
 import websockets
 from datetime import datetime
+from flask_compress import Compress
+from flask_cors import CORS
+import msgpack
+import uuid
 
 app = Flask(__name__)
+
+
+# Add compression
+def init_app(app):
+    Compress(app)
+    CORS(app)
+    app.config["COMPRESS_ALGORITHM"] = ["br", "gzip"]
+    app.config["COMPRESS_LEVEL"] = 6
+    app.config["COMPRESS_MIN_SIZE"] = 500
+
+
+init_app(app)
 
 
 def load_config():
@@ -25,6 +41,18 @@ web_ui_port = config.get("web_ui_port", 5000)
 
 # Load data
 data = pd.read_csv("sentiment_data.csv")
+
+
+# Add performance middleware
+@app.before_request
+def before_request():
+    # Add cache headers for static assets
+    if request.path.startswith("/static/"):
+        return make_response(
+            render_template("static.html"),
+            200,
+            {"Cache-Control": "public, max-age=31536000", "Vary": "Accept-Encoding"},
+        )
 
 
 @app.route("/")
@@ -314,9 +342,30 @@ def api_visualizations(video_id):
 
 import threading
 
+CONNECTIONS = {}
+
+
+async def optimized_ws_handler(websocket, path):
+    connection_id = str(uuid.uuid4())
+    CONNECTIONS[connection_id] = websocket
+
+    try:
+        async for message in websocket:
+            # Handle binary messages more efficiently
+            if isinstance(message, bytes):
+                data = msgpack.unpackb(message)
+            else:
+                data = json.loads(message)
+
+            await process_message(data, connection_id)
+    except Exception as e:
+        print(f"Error in WebSocket handler: {e}")
+    finally:
+        del CONNECTIONS[connection_id]
+
 
 async def main():
-    start_server = websockets.serve(real_time_visualization, "localhost", 8765)
+    start_server = websockets.serve(optimized_ws_handler, "localhost", 8765)
     flask_thread = threading.Thread(
         target=app.run,
         kwargs={"debug": True, "port": web_ui_port, "use_reloader": False},
