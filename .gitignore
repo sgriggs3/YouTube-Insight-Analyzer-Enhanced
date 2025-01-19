@@ -5,6 +5,7 @@ __pycache__/
 *.so
 .Python
 env/
+venv/
 build/
 develop-eggs/
 dist/
@@ -20,17 +21,45 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
 
 # Node
 node_modules/
+dist/
+coverage/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.npm
+.eslintcache
+.node_repl_history
+.yarn-integrity
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Environment variables
 .env
 .env.local
 .env.*.local
+*.env
+.venv
+.env.development
+.env.test
+.env.production
 
 # VS Code
 .vscode/*
@@ -38,15 +67,42 @@ yarn-error.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+*.code-workspace
+.history/
+.ionide
 
 # Project specific
+/data/
+/models/
+/logs/
 *.csv
-*.json
+*.log
+temp/
+.temp/
+
+# Exceptions (files to NOT ignore)
 !package.json
 !package-lock.json
 !tsconfig.json
-*.log
-/data
-/models
-__pycache__
-.pytest_cache
+!.devcontainer/devcontainer.json
+!requirements.txt
+!setup.py
+!pyproject.toml
+
+# System files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE specific
+.idea/
+*.sublime-workspace
+*.sublime-project
+.project
+.classpath
+.settings/
+*.tmproj
+*.esproj
+nbproject/
