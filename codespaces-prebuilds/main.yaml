@@ -7,32 +7,109 @@ on:
   pull_request:
     branches:
       - main
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight UTC
+  workflow_dispatch:  # Enable manual trigger
 
 jobs:
   prebuild:
     runs-on: ubuntu-latest
+    timeout-minutes: 30  # Set timeout to prevent hung builds
+
+    env:
+      NODE_VERSION: '18'
+      PYTHON_VERSION: '3.9'
+
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Node.js
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          
-      - name: Setup Python
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
-          
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: '**/requirements.txt'
+
+      - name: Cache NLTK Data
+        uses: actions/cache@v3
+        with:
+          path: ~/nltk_data
+          key: nltk-data-${{ runner.os }}-${{ hashFiles('**/requirements.txt') }}
+
       - name: Install Node.js Dependencies
         run: |
-          npm install
-          
+          echo "Installing Node.js dependencies..."
+          npm ci --prefer-offline
+        continue-on-error: false
+
       - name: Install Python Dependencies
         run: |
+          echo "Installing Python dependencies..."
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
+          echo "Downloading NLTK data..."
           python -m nltk.downloader punkt vader_lexicon
-          
+        continue-on-error: false
+
       - name: Build TypeScript
         run: |
+          echo "Building TypeScript..."
           npm run build
+        continue-on-error: false
+
+      - name: Run Tests
+        run: |
+          echo "Running Python tests..."
+          python -m pytest
+          echo "Running Node.js tests..."
+          npm test
+        continue-on-error: true  # Don't fail the build if tests fail
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v3
+        if: success()
+        with:
+          name: dist
+          path: |
+            dist/
+            build/
+          retention-days: 7
+
+      - name: Setup Dev Container
+        uses: devcontainers/ci@v0.3
+        if: success()
+        with:
+          imageName: ghcr.io/${{ github.repository }}
+          cacheFrom: ghcr.io/${{ github.repository }}
+          push: always
+
+      - name: Notify on Failure
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔴 Prebuild failed on main branch',
+              body: `Prebuild failed at ${new Date().toISOString()}\nWorkflow: ${context.workflow}\nRun: ${context.runNumber}\nURL: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            })
+
+permissions:
+  contents: read
+  packages: write
+  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
