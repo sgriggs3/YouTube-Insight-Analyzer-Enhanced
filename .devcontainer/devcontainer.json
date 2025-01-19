@@ -1,6 +1,29 @@
 {
   "name": "YouTube Insight Analyzer",
-  "image": "mcr.microsoft.com/vscode/devcontainers/python:3.9",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "python.defaultInterpreterPath": "/usr/local/bin/python",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+    "typescript.tsdk": "node_modules/typescript/lib"
+  },
+  "extensions": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-toolsai.jupyter",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-typescript-next",
+    "ms-python.black-formatter"
+  ],
+  "forwardPorts": [8080],
+  "postCreateCommand": "npm ci && pip install -r requirements.txt && python -m nltk.downloader punkt vader_lexicon",
+  "remoteUser": "vscode",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "18"
@@ -9,29 +32,9 @@
       "version": "3.9"
     }
   },
-  "settings": {
-    "terminal.integrated.defaultProfile.linux": "bash",
-    "python.defaultInterpreterPath": "/usr/local/bin/python",
-    "python.linting.enabled": true,
-    "python.linting.pylintEnabled": true,
-    "python.formatting.provider": "black",
-    "editor.formatOnSave": true
-  },
-  "extensions": [
-    "ms-python.python",
-    "ms-python.vscode-pylance",
-    "ms-toolsai.jupyter",
-    "dbaeumer.vscode-eslint",
-    "esbenp.prettier-vscode",
-    "ms-python.black-formatter"
-  ],
-  "postCreateCommand": "pip install -r requirements.txt && python -m nltk.downloader punkt vader_lexicon && npm install",
-  "forwardPorts": [8080],
-  "remoteUser": "vscode",
   "containerEnv": {
     "PYTHONPATH": "${containerWorkspaceFolder}",
-    "YOUTUBE_API_KEY": "${localEnv:YOUTUBE_API_KEY}",
-    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}"
+    "NODE_ENV": "development"
   },
   "customizations": {
     "codespaces": {
