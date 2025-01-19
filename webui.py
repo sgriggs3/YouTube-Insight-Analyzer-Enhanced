@@ -145,6 +145,12 @@ def user_feedback_form():
         return jsonify({"message": "Feedback received successfully"})
     return render_template('user_feedback_form.html')
 
+@app.route('/health')
+def health_check():
+    return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()})
+    
 if __name__ == '__main__':
     start_websocket_server()
     app.run(debug=True)
+
+
