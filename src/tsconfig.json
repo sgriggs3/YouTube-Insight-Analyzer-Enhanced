@@ -8,23 +8,10 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "types": [
-      "node",
-      "jest",
-      "mocha"
-    ],
-    "typeRoots": [
-      "./node_modules/@types"
-    ],
-    "lib": [
-      "es6",
-      "dom"
-    ]
+    "types": ["node", "jest", "mocha"],
+    "typeRoots": ["./node_modules/@types"],
+    "lib": ["es6", "dom"]
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src/**/*", "src/backend/**/*"],
+  "exclude": ["node_modules"]
 }
