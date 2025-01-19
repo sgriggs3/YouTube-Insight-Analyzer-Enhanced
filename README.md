@@ -112,151 +112,151 @@ The following tasks are prioritized to ensure the most efficient development pro
 - Implement a feature to analyze video audience retention.
 - Add a feature to analyze video traffic sources.
 - Implement a feature to analyze video demographics.
-- Add a feature to analyze video playback locations.
+- Implement a feature to analyze video playback locations.
 - Implement a feature to analyze video devices.
-- Add a feature to analyze video operating systems.
+- Implement a feature to analyze video operating systems.
 - Implement a feature to analyze video browsers.
-- Add a feature to analyze video network performance.
+- Implement a feature to analyze video network performance.
 - Implement a feature to analyze video monetization.
-- Add a feature to analyze video advertising.
+- Implement a feature to analyze video advertising.
 - Implement a feature to analyze video sponsorships.
-- Add a feature to analyze video merchandise.
+- Implement a feature to analyze video merchandise.
 - Implement a feature to analyze video crowdfunding.
-- Add a feature to analyze video affiliate marketing.
+- Implement a feature to analyze video affiliate marketing.
 - Implement a feature to analyze video brand mentions.
-- Add a feature to analyze video product placements.
+- Implement a feature to analyze video product placements.
 - Implement a feature to analyze video collaborations.
-- Add a feature to analyze video challenges.
+- Implement a feature to analyze video challenges.
 - Implement a feature to analyze video trends.
-- Add a feature to analyze video memes.
+- Implement a feature to analyze video memes.
 - Implement a feature to analyze video hashtags.
-- Add a feature to analyze video emojis.
+- Implement a feature to analyze video emojis.
 - Implement a feature to analyze video links.
-- Add a feature to analyze video timestamps.
+- Implement a feature to analyze video timestamps.
 - Implement a feature to analyze video chapters.
-- Add a feature to analyze video cards.
+- Implement a feature to analyze video cards.
 - Implement a feature to analyze video end screens.
-- Add a feature to analyze video playlists.
+- Implement a feature to analyze video playlists.
 - Implement a feature to analyze video live chat.
-- Add a feature to analyze video polls.
+- Implement a feature to analyze video polls.
 - Implement a feature to analyze video quizzes.
-- Add a feature to analyze video surveys.
+- Implement a feature to analyze video surveys.
 - Implement a feature to analyze video contests.
-- Add a feature to analyze video giveaways.
+- Implement a feature to analyze video giveaways.
 - Implement a feature to analyze video events.
-- Add a feature to analyze video conferences.
+- Implement a feature to analyze video conferences.
 - Implement a feature to analyze video workshops.
-- Add a feature to analyze video tutorials.
+- Implement a feature to analyze video tutorials.
 - Implement a feature to analyze video reviews.
-- Add a feature to analyze video unboxings.
+- Implement a feature to analyze video unboxings.
 - Implement a feature to analyze video hauls.
-- Add a feature to analyze video vlogs.
+- Implement a feature to analyze video vlogs.
 - Implement a feature to analyze video documentaries.
-- Add a feature to analyze video animations.
+- Implement a feature to analyze video animations.
 - Implement a feature to analyze video music videos.
-- Add a feature to analyze video short films.
+- Implement a feature to analyze video short films.
 - Implement a feature to analyze video trailers.
-- Add a feature to analyze video teasers.
+- Implement a feature to analyze video teasers.
 - Implement a feature to analyze video behind the scenes.
-- Add a feature to analyze video bloopers.
+- Implement a feature to analyze video bloopers.
 - Implement a feature to analyze video parodies.
-- Add a feature to analyze video reactions.
+- Implement a feature to analyze video reactions.
 - Implement a feature to analyze video compilations.
-- Add a feature to analyze video speedruns.
+- Implement a feature to analyze video speedruns.
 - Implement a feature to analyze video walkthroughs.
-- Add a feature to analyze video let's plays.
+- Implement a feature to analyze video let's plays.
 - Implement a feature to analyze video gaming.
-- Add a feature to analyze video esports.
+- Implement a feature to analyze video esports.
 - Implement a feature to analyze video podcasts.
-- Add a feature to analyze video interviews.
+- Implement a feature to analyze video interviews.
 - Implement a feature to analyze video discussions.
-- Add a feature to analyze video debates.
+- Implement a feature to analyze video debates.
 - Implement a feature to analyze video news.
-- Add a feature to analyze video educational content.
+- Implement a feature to analyze video educational content.
 - Implement a feature to analyze video how-to guides.
-- Add a feature to analyze video DIY projects.
+- Implement a feature to analyze video DIY projects.
 - Implement a feature to analyze video cooking.
-- Add a feature to analyze video travel.
+- Implement a feature to analyze video travel.
 - Implement a feature to analyze video fitness.
-- Add a feature to analyze video health.
+- Implement a feature to analyze video health.
 - Implement a feature to analyze video beauty.
-- Add a feature to analyze video fashion.
+- Implement a feature to analyze video fashion.
 - Implement a feature to analyze video art.
 - Implement a feature to analyze video music.
-- Add a feature to analyze video dance.
+- Implement a feature to analyze video dance.
 - Implement a feature to analyze video comedy.
-- Add a feature to analyze video drama.
+- Implement a feature to analyze video drama.
 - Implement a feature to analyze video horror.
-- Add a feature to analyze video science fiction.
+- Implement a feature to analyze video science fiction.
 - Implement a feature to analyze video fantasy.
-- Add a feature to analyze video romance.
-- Add a feature to analyze video action.
+- Implement a feature to analyze video romance.
+- Implement a feature to analyze video action.
 - Implement a feature to analyze video adventure.
-- Add a feature to analyze video mystery.
+- Implement a feature to analyze video mystery.
 - Implement a feature to analyze video thriller.
-- Add a feature to analyze video historical.
+- Implement a feature to analyze video historical.
 - Implement a feature to analyze video biographical.
-- Add a feature to analyze video political.
+- Implement a feature to analyze video political.
 - Implement a feature to analyze video religious.
-- Add a feature to analyze video philosophical.
+- Implement a feature to analyze video philosophical.
 - Implement a feature to analyze video psychological.
-- Add a feature to analyze video sociological.
+- Implement a feature to analyze video sociological.
 - Implement a feature to analyze video economic.
-- Add a feature to analyze video environmental.
+- Implement a feature to analyze video environmental.
 - Implement a feature to analyze video technological.
-- Add a feature to analyze video legal.
+- Implement a feature to analyze video legal.
 - Implement a feature to analyze video medical.
-- Add a feature to analyze video educational.
+- Implement a feature to analyze video educational.
 - Implement a feature to analyze video cultural.
-- Add a feature to analyze video social.
+- Implement a feature to analyze video social.
 - Implement a feature to analyze video personal.
-- Add a feature to analyze video professional.
+- Implement a feature to analyze video professional.
 - Implement a feature to analyze video business.
-- Add a feature to analyze video marketing.
+- Implement a feature to analyze video marketing.
 - Implement a feature to analyze video sales.
-- Add a feature to analyze video customer service.
+- Implement a feature to analyze video customer service.
 - Implement a feature to analyze video human resources.
-- Add a feature to analyze video finance.
+- Implement a feature to analyze video finance.
 - Implement a feature to analyze video accounting.
-- Add a feature to analyze video management.
+- Implement a feature to analyze video management.
 - Implement a feature to analyze video leadership.
-- Add a feature to analyze video teamwork.
+- Implement a feature to analyze video teamwork.
 - Implement a feature to analyze video communication.
-- Add a feature to analyze video negotiation.
+- Implement a feature to analyze video negotiation.
 - Implement a feature to analyze video problem solving.
-- Add a feature to analyze video decision making.
+- Implement a feature to analyze video decision making.
 - Implement a feature to analyze video critical thinking.
-- Add a feature to analyze video creativity.
+- Implement a feature to analyze video creativity.
 - Implement a feature to analyze video innovation.
-- Add a feature to analyze video entrepreneurship.
+- Implement a feature to analyze video entrepreneurship.
 - Implement a feature to analyze video startups.
-- Add a feature to analyze video investments.
+- Implement a feature to analyze video investments.
 - Implement a feature to analyze video personal finance.
-- Add a feature to analyze video real estate.
+- Implement a feature to analyze video real estate.
 - Implement a feature to analyze video insurance.
-- Add a feature to analyze video retirement planning.
+- Implement a feature to analyze video retirement planning.
 - Implement a feature to analyze video estate planning.
-- Add a feature to analyze video taxes.
+- Implement a feature to analyze video taxes.
 - Implement a feature to analyze video law.
-- Add a feature to analyze video government.
+- Implement a feature to analyze video government.
 - Implement a feature to analyze video politics.
-- Add a feature to analyze video history.
+- Implement a feature to analyze video history.
 - Implement a feature to analyze video geography.
-- Add a feature to analyze video science.
+- Implement a feature to analyze video science.
 - Implement a feature to analyze video technology.
-- Add a feature to analyze video engineering.
+- Implement a feature to analyze video engineering.
 - Implement a feature to analyze video mathematics.
-- Add a feature to analyze video statistics.
+- Implement a feature to analyze video statistics.
 - Implement a feature to analyze video data science.
-- Add a feature to analyze video artificial intelligence.
+- Implement a feature to analyze video artificial intelligence.
 - Implement a feature to analyze video machine learning.
-- Add a feature to analyze video deep learning.
+- Implement a feature to analyze video deep learning.
 - Implement a feature to analyze video natural language processing.
-- Add a feature to analyze video computer vision.
+- Implement a feature to analyze video computer vision.
 - Implement a feature to analyze video robotics.
-- Add a feature to analyze video cybersecurity.
+- Implement a feature to analyze video cybersecurity.
 - Implement a feature to analyze video cloud computing.
-- Add a feature to analyze video blockchain.
+- Implement a feature to analyze video blockchain.
 - Implement a feature to analyze video cryptocurrency.
 
 ## Project Description and Objectives
@@ -675,3 +675,53 @@ This will generate a sentiment distribution analysis chart and save it as an HTM
      "remoteUser": "vscode"
    }
    ```
+
+## Setting Up and Running the Script Using CLine
+
+### Prerequisites
+
+1. **Install CLine Extension**: Ensure you have the CLine VSCode extension installed.
+2. **Install Python Dependencies**: Ensure you have the required Python dependencies installed. You can install them using the following command:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### Steps
+
+1. **Create a `.env` File**: Create a `.env` file in the root directory of your project and add your API keys. For example:
+
+   ```env
+   API_KEYS=key1,key2,key3
+   ```
+
+2. **Add `cline.config.json` File**: Add a `cline.config.json` file to the root directory of your project with the following content:
+
+   ```json
+   {
+       "tasks": [
+           {
+               "label": "Run Gemini API Script",
+               "type": "shell",
+               "command": "python",
+               "args": [
+                   "gemini_script.py",
+                   "--output-file",
+                   "results.json"
+               ],
+               "env": {
+                   "API_KEYS": "key1,key2,key3"
+               },
+               "problemMatcher": []
+           }
+       ]
+   }
+   ```
+
+3. **Run the Task**:
+
+   - Open the command palette (Ctrl + Shift + P).
+   - Select `Tasks: Run Task`.
+   - Choose `Run Gemini API Script` from the list.
+
+4. **Verify the Results**: Check the `results.json` file in the root directory of your project to verify the results of the script.
