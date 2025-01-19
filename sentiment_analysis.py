@@ -1,4 +1,4 @@
-import pandas as pd
+of code and executing then create log file called "tasks-finished" where you give insurctions and srtailsimport pandadetails and on the task and what was fixed or improved. Continue saving the progress to that file.
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from transformers import (
     pipeline,
@@ -19,6 +19,10 @@ from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer, WordNetLemmatizer
 from spellchecker import SpellChecker
 import json
+from textblob import TextBlob
+from nltk.tokenize import sent_tokenize
+from typing import List, Dict, Any
+import logging
 
 
 def load_config():
@@ -146,75 +150,122 @@ def perform_sentiment_analysis(text_inputs, language="en"):
             )
             outputs = bert_model(**inputs)
             probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
-            bert_result = {
-                "label": "positive" if probs[0][1] > probs[0][0] else "negative",
-                "score": (
-                    probs[0][1].item()
-                    if probs[0][1] > probs[0][0]
-                    else probs[0][0].item()
-                ),
+            result = {
+                "text": text,
+                "sentiment": "positive" if sentiment.polarity > 0 else "negative",
+                "score": abs(sentiment.polarity),
+                "polarity": sentiment.polarity,
+                "subjectivity": sentiment.subjectivity,
             }
-            results.append(
-                {
-                    "input_text": input_text,
-                    "input_type": input_type,
-                    "preprocessed_text": preprocessed_text,
-                    "bert_sentiment": bert_result,
-                    "topic_results": topic_results,
-                }
-            )
-    return pd.DataFrame(results)
+            results.append(result)
+
+    return results
 
 
-def categorize_comments_by_themes(texts, text_type="comment"):
-    # Preprocess texts
-    preprocessed_texts = [preprocess_comment(text) for text in texts]
+def categorize_comments_by_themes(
+    texts: List[str], text_type: str = "comment"
+) -> Dict[str, List[str]]:
+    """
+    Categorize comments into themes using NLP.
 
-    # Convert texts to contextual embeddings
-    embeddings = sentence_model.encode(preprocessed_texts)
+    Args:
+        texts: List of text strings to analyze
+        text_type: Type of text ("comment" or "transcript")
 
-    # Topic modeling using LDA
-    vectorizer = CountVectorizer()
-    vectorized_texts = vectorizer.fit_transform(preprocessed_texts)
-    lda = LatentDirichletAllocation(n_components=5, random_state=42)
-    lda.fit(vectorized_texts)
-    lda_topics = []
-    for topic_idx, topic in enumerate(lda.components_):
-        lda_topics.append(
-            {
-                "topic_id": topic_idx,
-                "words": [
-                    vectorizer.get_feature_names_out()[i]
-                    for i in topic.argsort()[:-11:-1]
-                ],
-            }
-        )
+    Returns:
+        Dictionary mapping themes to lists of relevant texts
+    """
+    themes = defaultdict(list)
 
-    # Topic modeling using NMF
-    nmf = NMF(n_components=5, random_state=42)
-    nmf.fit(vectorized_texts)
-    nmf_topics = []
-    for topic_idx, topic in enumerate(nmf.components_):
-        nmf_topics.append(
-            {
-                "topic_id": topic_idx,
-                "words": [
-                    vectorizer.get_feature_names_out()[i]
-                    for i in topic.argsort()[:-11:-1]
-                ],
-            }
-        )
-
-    # Hierarchical clustering
-    clustering = AgglomerativeClustering(n_clusters=5)
-    clusters = clustering.fit_predict(embeddings)
-
-    return {
-        "lda_topics": lda_topics,
-        "nmf_topics": nmf_topics,
-        "clusters": clusters,
-        "text_type": text_type,
+    # Define key topics/themes to look for
+    topic_keywords = {
+        "technical": ["quality", "audio", "video", "resolution", "buffer"],
+        "content": ["interesting", "boring", "informative", "helpful"],
+        "emotional": ["love", "hate", "amazing", "terrible"],
+        "critique": ["disagree", "agree", "wrong", "right", "should"],
     }
+
+    for text in texts:
+        doc = nlp(text.lower())
+
+        # Get main topics from noun chunks and named entities
+        topics = set()
+        topics.update([chunk.text for chunk in doc.noun_chunks])
+        topics.update([ent.text for ent in doc.ents])
+
+        # Categorize based on keywords
+        for theme, keywords in topic_keywords.items():
+            if any(keyword in text.lower() for keyword in keywords):
+                themes[theme].append(text)
+
+        # Add general topics category
+        if topics:
+            themes["topics"].extend(list(topics))
+
+    return dict(themes)
+
+
+def analyze_sentiment_trends(sentiment_results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Analyze trends in sentiment results over time.
+
+    Args:
+        sentiment_results: List of sentiment analysis results
+
+    Returns:
+        Dictionary containing trend analysis
+    """
+    df = pd.DataFrame(sentiment_results)
+
+    trends = {
+        "average_sentiment": df["polarity"].mean(),
+        "sentiment_std": df["polarity"].std(),
+        "subjectivity_mean": df["subjectivity"].mean(),
+        "sentiment_counts": df["sentiment"].value_counts().to_dict(),
+        "strong_reactions": len(df[df["score"] > 0.9]),  # High confidence sentiments
+    }
+
+    return trends
+
+
+def get_key_phrases(texts: List[str], min_count: int = 2) -> List[str]:
+    """Extract key phrases that appear frequently in the texts."""
+    phrases = defaultdict(int)
+
+    for text in texts:
+        doc = nlp(text)
+
+        # Extract noun phrases
+        for chunk in doc.noun_chunks:
+            if len(chunk.text.split()) > 1:  # Only phrases
+                phrases[chunk.text.lower()] += 1
+
+    # Filter by minimum count
+    return [phrase for phrase, count in phrases.items() if count >= min_count]
+
+
+def export_analysis(
+    sentiment_results: List[Dict[str, Any]],
+    trends: Dict[str, Any],
+    format: str = "json",
+) -> str:
+    """Export analysis results in specified format."""
+    df = pd.DataFrame(sentiment_results)
+
+    if format == "csv":
+        return df.to_csv(index=False)
+    elif format == "json":
+        return {
+            "sentiment_results": sentiment_results,
+            "trends": trends,
+            "summary": {
+                "total_analyzed": len(sentiment_results),
+                "average_sentiment": trends["average_sentiment"],
+                "top_sentiments": trends["sentiment_counts"],
+            },
+        }
+    else:
+        raise ValueError("Unsupported export format")
 
 
 def incorporate_user_feedback(feedback_data, sentiment_data):
@@ -375,64 +426,213 @@ if "sentiment_echo_chamber" in sentiment_data.columns:
             f"Identified {len(echo_chamber_comments)} comments within potential echo chambers."
         )
 
-    def detect_toxic_comments(self, text_inputs):
-        results = []
-        for text in text_inputs:
-            if isinstance(text, dict) and "text" in text:
-                input_text = text["text"]
-                input_type = text.get("type", "comment")
-            else:
-                input_text = text
-                input_type = "comment"
 
-            inputs = toxic_tokenizer(
-                input_text, return_tensors="pt", truncation=True, padding=True
+def detect_toxic_comments(text_inputs):
+    results = []
+    for text in text_inputs:
+        if isinstance(text, dict) and "text" in text:
+            input_text = text["text"]
+            input_type = text.get("type", "comment")
+        else:
+            input_text = text
+            input_type = "comment"
+
+        inputs = toxic_tokenizer(
+            input_text, return_tensors="pt", truncation=True, padding=True
+        )
+        with torch.no_grad():
+            outputs = toxic_model(**inputs)
+
+        probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
+        toxic_score = probs[0][1].item()
+
+        results.append(
+            {
+                "input_text": input_text,
+                "input_type": input_type,
+                "toxic_score": toxic_score,
+                "is_toxic": toxic_score > 0.5,
+            }
+        )
+    return pd.DataFrame(results)
+
+
+def predict_opinions(texts, text_type="comment", language="en"):
+    """
+    Placeholder for opinion prediction logic.
+    """
+    return {"opinion_predictions": "Opinion predictions not yet implemented"}
+
+
+def detect_bias(texts, text_type="comment", language="en"):
+    """
+    Placeholder for bias detection logic.
+    """
+    return {"bias_detection_results": "Bias detection not yet implemented"}
+
+
+def analyze_social_issues(texts, text_type="comment", language="en"):
+    """
+    Placeholder for social issue analysis logic.
+    """
+    return {"social_issue_analysis": "Social issue analysis not yet implemented"}
+
+
+def analyze_psychological_aspects(texts, text_type="comment", language="en"):
+    """
+    Placeholder for psychological analysis logic.
+    """
+    return {"psychological_analysis": "Psychological analysis not yet implemented"}
+
+
+def analyze_philosophical_aspects(texts, text_type="comment", language="en"):
+    """
+    Placeholder for philosophical analysis logic.
+    """
+    return {"philosophical_analysis": "Philosophical analysis not yet implemented"}
+
+
+def analyze_truth_and_objectivity(texts, text_type="comment", language="en"):
+    """
+    Placeholder for truth and objectivity analysis logic.
+    """
+    return {
+        "truth_and_objectivity_analysis": "Truth and objectivity analysis not yet implemented"
+    }
+
+
+class SentimentAnalyzer:
+    def __init__(self):
+        """Initialize sentiment analysis models"""
+        try:
+            self.sentiment_pipeline = pipeline(
+                "sentiment-analysis",
+                model="nlptown/bert-base-multilingual-uncased-sentiment",
             )
-            with torch.no_grad():
-                outputs = toxic_model(**inputs)
+        except Exception as e:
+            logging.error(f"Error initializing sentiment pipeline: {e}")
+            self.sentiment_pipeline = None
+        # Download required NLTK data
+        nltk.download("punkt", quiet=True)
+        # Initialize transformers pipeline for more accurate sentiment analysis
+        self.sentiment_pipeline = pipeline("sentiment-analysis")
+        self.logger = logging.getLogger(__name__)
 
-            probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
-            toxic_score = probs[0][1].item()
-
-            results.append(
-                {
-                    "input_text": input_text,
-                    "input_type": input_type,
-                    "toxic_score": toxic_score,
-                    "is_toxic": toxic_score > 0.5,
+    def analyze_text(self, text: str) -> Dict[str, Any]:
+        """Analyze sentiment of a single text."""
+        try:
+            if self.sentiment_pipeline:
+                result = self.sentiment_pipeline(text)[0]
+                return {
+                    "text": text,
+                    "label": result["label"],
+                    "score": result["score"],
                 }
-            )
-        return pd.DataFrame(results)
+            else:
+                vader_result = vader_analyzer.polarity_scores(text)
+                return {
+                    "text": text,
+                    "label": (
+                        "POSITIVE"
+                        if vader_result["compound"] >= 0.05
+                        else (
+                            "NEGATIVE"
+                            if vader_result["compound"] <= -0.05
+                            else "NEUTRAL"
+                        )
+                    ),
+                    "score": vader_result["compound"],
+                }
+        except Exception as e:
+            logging.error(f"Error analyzing text: {e}")
+            return {"text": text, "label": "ERROR", "score": 0.0}
 
-    def predict_opinions(self, texts, text_type="comment", language="en"):
-        # Placeholder for opinion prediction logic
-        # This will use machine learning models to predict user opinions
-        # based on comment sentiment, keywords, and other features.
-        return {"opinion_predictions": "Opinion predictions not yet implemented"}
-
-    def detect_bias(self, texts, text_type="comment", language="en"):
-        # Placeholder for bias detection logic
-        # This will use NLP techniques to detect bias in comments and video content.
-        return {"bias_detection_results": "Bias detection not yet implemented"}
-
-    def analyze_social_issues(self, texts, text_type="comment", language="en"):
-        # Placeholder for social issue analysis logic
-        # This will identify and analyze social issues discussed in comments and video content.
-        return {"social_issue_analysis": "Social issue analysis not yet implemented"}
-
-    def analyze_psychological_aspects(self, texts, text_type="comment", language="en"):
-        # Placeholder for psychological analysis logic
-        # This will analyze the psychological aspects of comments and video content.
-        return {"psychological_analysis": "Psychological analysis not yet implemented"}
-
-    def analyze_philosophical_aspects(self, texts, text_type="comment", language="en"):
-        # Placeholder for philosophical analysis logic
-        # This will analyze the philosophical aspects of comments and video content.
-        return {"philosophical_analysis": "Philosophical analysis not yet implemented"}
-
-    def analyze_truth_and_objectivity(self, texts, text_type="comment", language="en"):
-        # Placeholder for truth and objectivity analysis logic
-        # This will analyze the truth and objectivity of video content and comments.
-        return {
-            "truth_and_objectivity_analysis": "Truth and objectivity analysis not yet implemented"
+    def analyze_comments(self, comments: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Analyze sentiment of multiple comments."""
+        results = []
+        overall_sentiment = {
+            "positive": 0,
+            "negative": 0,
+            "neutral": 0,
+            "avg_polarity": 0,
+            "avg_subjectivity": 0,
         }
+
+        try:
+            texts = [comment["text"] for comment in comments]
+            sentiments = self.analyze_texts(texts)
+            for sentiment in sentiments:
+                results.append(sentiment)
+                if sentiment["label"] == "POSITIVE":
+                    overall_sentiment["positive"] += 1
+                elif sentiment["label"] == "NEGATIVE":
+                    overall_sentiment["negative"] += 1
+                else:
+                    overall_sentiment["neutral"] += 1
+                overall_sentiment["avg_polarity"] += sentiment["score"]
+            overall_sentiment["avg_polarity"] /= len(sentiments)
+        except Exception as e:
+            logging.error(f"Error analyzing comments: {e}")
+
+        return {"comments": results, "overall_sentiment": overall_sentiment}
+
+    def categorize_comments_by_themes(
+        self, comments: List[Dict[str, Any]]
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """Categorize comments by common themes/topics."""
+        themes = {}
+
+        try:
+            # Basic theme categorization - this could be enhanced with topic modeling
+            keywords = {
+                "technical": [
+                    "code",
+                    "bug",
+                    "error",
+                    "fix",
+                    "issue",
+                    "problem",
+                    "solution",
+                ],
+                "positive_feedback": [
+                    "great",
+                    "awesome",
+                    "amazing",
+                    "good",
+                    "love",
+                    "excellent",
+                ],
+                "negative_feedback": [
+                    "bad",
+                    "poor",
+                    "terrible",
+                    "hate",
+                    "awful",
+                    "worst",
+                ],
+                "suggestion": [
+                    "suggest",
+                    "improvement",
+                    "should",
+                    "could",
+                    "would",
+                    "maybe",
+                ],
+                "question": ["how", "what", "why", "when", "where", "who", "?"],
+            }
+
+            for comment in comments:
+                text = comment["text"].lower()
+
+                # Categorize comment based on keywords
+                for theme, words in keywords.items():
+                    if any(word in text for word in words):
+                        if theme not in themes:
+                            themes[theme] = []
+                        themes[theme].append(comment)
+
+            return themes
+
+        except Exception as e:
+            self.logger.error(f"Error categorizing comments: {e}")
+            raise

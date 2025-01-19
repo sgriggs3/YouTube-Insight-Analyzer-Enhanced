@@ -11,8 +11,15 @@ from data_visualization import start_websocket_server, real_time_visualization
 import asyncio
 import websockets
 from datetime import datetime
+from functools import lru_cache
+import redis
+import logging
 
 app = Flask(__name__)
+
+# Setup Redis cache
+redis_client = redis.Redis(host="localhost", port=6379, db=0)
+CACHE_TIMEOUT = 3600  # 1 hour
 
 
 def load_config():
@@ -61,12 +68,11 @@ def input_url():
     url = request.json.get("url")
     try:
         video_id = youtube_api.extract_video_id(url)
+        if not video_id:
+            return jsonify({"error": "Invalid YouTube URL"}), 400
         comments = youtube_api.get_video_comments(video_id)
         sentiment_results = sentiment_analysis.perform_sentiment_analysis(
-            [
-                comment["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
-                for comment in comments
-            ]
+            [comment["text"] for comment in comments]
         )
         youtube_api.save_data_to_csv(
             sentiment_results, f"{video_id}_sentiment_analysis.csv"
@@ -186,10 +192,7 @@ def input_url_form():
         video_id = youtube_api.extract_video_id(url)
         comments = youtube_api.get_video_comments(video_id)
         sentiment_results = sentiment_analysis.perform_sentiment_analysis(
-            [
-                comment["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
-                for comment in comments
-            ]
+            [comment["text"] for comment in comments]
         )
         youtube_api.save_data_to_csv(
             sentiment_results, f"{video_id}_sentiment_analysis.csv"
@@ -208,10 +211,7 @@ def start_sentiment_analysis():
             video_id = youtube_api.extract_video_id(url)
             comments = youtube_api.get_video_comments(video_id)
             sentiment_results = sentiment_analysis.perform_sentiment_analysis(
-                [
-                    comment["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
-                    for comment in comments
-                ]
+                [comment["text"] for comment in comments]
             )
             results.append(sentiment_results)
         except Exception as e:
@@ -262,9 +262,7 @@ def api_sentiment_analysis(video_id):
         text_inputs.extend(
             [
                 {
-                    "text": comment["snippet"]["topLevelComment"]["snippet"][
-                        "textDisplay"
-                    ],
+                    "text": comment["text"],
                     "type": "comment",
                 }
                 for comment in comments
@@ -276,7 +274,7 @@ def api_sentiment_analysis(video_id):
         )
 
     sentiment_results = sentiment_analysis.perform_sentiment_analysis(text_inputs)
-    return jsonify(sentiment_results.to_dict(orient="records"))
+    return jsonify(sentiment_results)
 
 
 @app.route("/api/visualizations/<video_id>", methods=["GET"])
@@ -289,9 +287,7 @@ def api_visualizations(video_id):
         text_inputs.extend(
             [
                 {
-                    "text": comment["snippet"]["topLevelComment"]["snippet"][
-                        "textDisplay"
-                    ],
+                    "text": comment["text"],
                     "type": "comment",
                 }
                 for comment in comments
@@ -312,6 +308,124 @@ def api_visualizations(video_id):
     )
 
 
+@lru_cache(maxsize=100)
+def get_cached_video_metadata(video_id: str) -> Dict[str, Any]:
+    """Cache video metadata in memory and Redis."""
+    # Try Redis first
+    cache_key = f"metadata:{video_id}"
+    cached = redis_client.get(cache_key)
+    if cached:
+        return json.loads(cached)
+
+    # Fetch from API if not cached
+    metadata = youtube_api.get_video_metadata(video_id)
+    redis_client.setex(cache_key, CACHE_TIMEOUT, json.dumps(metadata))
+    return metadata
+
+
+class WebSocketManager:
+    def __init__(self):
+        self.active_connections = set()
+
+    async def connect(self, websocket):
+        self.active_connections.add(websocket)
+        try:
+            video_id = youtube_api.extract_video_id(url)
+            if not video_id:
+                return jsonify({"error": "Invalid YouTube URL"}), 400
+
+            # Parallel fetching of metadata and comments
+            metadata_task = asyncio.create_task(get_cached_video_metadata(video_id))
+            comments_task = asyncio.create_task(
+                youtube_api.get_video_comments(video_id)
+            )
+
+            metadata, comments = await asyncio.gather(metadata_task, comments_task)
+
+            # Process sentiment analysis in background
+            asyncio.create_task(process_sentiment_analysis(video_id, comments))
+
+            return jsonify(
+                {
+                    "success": True,
+                    "metadata": metadata,
+                    "comments": comments[:10],
+                    "commentCount": len(comments),
+                    "job_id": video_id,  # For polling sentiment results
+                }
+            )
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/analyze", methods=["POST"])
+def analyze_video():
+    """API endpoint to analyze a video URL"""
+    try:
+        url = request.json.get("url")
+        if not url:
+            return jsonify({"error": "No URL provided"}), 400
+
+        video_id = youtube_api.extract_video_id(url)
+        if not video_id:
+            return jsonify({"error": "Invalid YouTube URL"}), 400
+
+        api = youtube_api.YouTubeAPI()
+
+        # Get video metadata
+        try:
+            metadata = api.get_video_metadata(video_id)
+        except Exception as e:
+            return jsonify({"error": f"Failed to get video metadata: {str(e)}"}), 500
+
+        # Get video comments
+        try:
+            comments = api.get_video_comments(video_id)
+        except Exception as e:
+            return jsonify({"error": f"Failed to get video comments: {str(e)}"}), 500
+
+        # Save data
+        youtube_api.save_data_to_json(metadata, f"{video_id}_metadata.json")
+        youtube_api.save_data_to_csv(comments, f"{video_id}_comments.csv")
+
+        return jsonify(
+            {
+                "success": True,
+                "metadata": metadata,
+                "comments": comments[:10],  # First 10 comments for preview
+                "commentCount": len(comments),
+            }
+        )
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/sentiment", methods=["POST"])
+def analyze_sentiment():
+    """API endpoint for sentiment analysis"""
+    try:
+        video_id = request.json.get("video_id")
+        if not video_id:
+            return jsonify({"error": "No video ID provided"}), 400
+
+        comments_file = f"data/{video_id}_comments.csv"
+        if not os.path.exists(comments_file):
+            return jsonify({"error": "Comments data not found"}), 404
+
+        # Load and analyze comments
+        comments_df = pd.read_csv(comments_file)
+
+        # TODO: Add actual sentiment analysis
+        sentiment_results = {"positive": 0, "negative": 0, "neutral": 0}
+
+        return jsonify({"success": True, "sentiment": sentiment_results})
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 import threading
 
 
@@ -327,3 +441,59 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+from flask import Flask, request, jsonify
+from youtube_api import YouTubeAPI
+from sentiment_analysis import SentimentAnalyzer
+from data_visualization import visualize_sentiment_trends
+
+app = Flask(__name__)
+youtube_api = YouTubeAPI()
+sentiment_analyzer = SentimentAnalyzer()
+
+
+@app.route("/api/video/metadata", methods=["GET"])
+def get_video_metadata():
+    video_id = request.args.get("video_id")
+    if not video_id:
+        return jsonify({"error": "video_id parameter is required"}), 400
+    try:
+        metadata = youtube_api.get_video_metadata(video_id)
+        return jsonify(metadata)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/video/comments", methods=["GET"])
+def get_video_comments():
+    video_id = request.args.get("video_id")
+    max_results = request.args.get("max_results", default=100, type=int)
+    if not video_id:
+        return jsonify({"error": "video_id parameter is required"}), 400
+    try:
+        comments = youtube_api.get_video_comments(video_id, max_results)
+        analyzed_comments = sentiment_analyzer.analyze_comments(comments)
+        return jsonify(analyzed_comments)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/video/transcript", methods=["GET"])
+def get_video_transcript():
+    video_id = request.args.get("video_id")
+    if not video_id:
+        return jsonify({"error": "video_id parameter is required"}), 400
+    try:
+        transcript = youtube_api.get_video_transcript(video_id)
+        if transcript:
+            return jsonify({"transcript": transcript})
+        else:
+            return jsonify({"transcript": None}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# Additional API endpoints for data visualization can be added here
+
+if __name__ == "__main__":
+    app.run(debug=True)

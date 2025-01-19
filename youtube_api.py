@@ -4,6 +4,13 @@ from youtube_transcript_api import YouTubeTranscriptApi
 import json
 import time
 import os
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from typing import Dict, List, Optional, Any
+import logging
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+import cachetools
 
 
 def load_config():
@@ -11,56 +18,89 @@ def load_config():
         return json.load(f)
 
 
-def authenticate_youtube_api(api_key):
-    return {"Authorization": f"Bearer {api_key}"}
+class YouTubeAPI:
+    def __init__(self, api_key: str = None):
+        self.api_key = api_key or load_config().get("youtube_api_key")
+        self.youtube = build("youtube", "v3", developerKey=self.api_key)
+        self.cache = cachetools.TTLCache(maxsize=100, ttl=3600)  # 1 hour cache
 
+        # Configure retry strategy
+        self.session = requests.Session()
+        retries = Retry(
+            total=5, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504]
+        )
+        self.session.mount("https://", HTTPAdapter(max_retries=retries))
 
-def get_video_comments(video_id, max_retries=5):
-    config = load_config()
-    api_key = config.get("youtube_api_key")
-    url = f"https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}"
-    retries = 0
-    while retries < max_retries:
-        response = requests.get(url)
-        if response.status_code == 200:
-            comments = response.json().get("items", [])
-            return comments
-        elif response.status_code == 403:
-            retries += 1
-            time.sleep(2**retries)
-        else:
-            return []
-    return []
-
-
-def get_video_metadata(video_id, max_retries=5):
-    config = load_config()
-    api_key = config.get("youtube_api_key")
-    url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id={video_id}&key={api_key}"
-    retries = 0
-    while retries < max_retries:
-        response = requests.get(url)
-        if response.status_code == 200:
-            metadata = response.json().get("items", [])
-            return metadata
-        elif response.status_code == 403:
-            retries += 1
-            time.sleep(2**retries)
-        else:
-            return []
-    return []
-
-
-def get_video_transcript(video_id, max_retries=5):
-    retries = 0
-    while retries < max_retries:
+    @cachetools.cached(lambda self: self.cache)
+    def get_video_metadata(self, video_id: str) -> Dict:
+        """Fetch video metadata with caching and retry logic."""
         try:
-            transcript = YouTubeTranscriptApi.get_transcript(video_id)
-            return transcript
+            response = (
+                self.youtube.videos()
+                .list(part="snippet,statistics", id=video_id)
+                .execute()
+            )
+            video = response["items"][0]
+            return {
+                "title": video["snippet"]["title"],
+                "description": video["snippet"]["description"],
+                "tags": video["snippet"].get("tags", []),
+                "views": video["statistics"]["viewCount"],
+                "likes": video["statistics"].get("likeCount", 0),
+                "comments": video["statistics"].get("commentCount", 0),
+            }
+        except HttpError as e:
+            print(f"An HTTP error {e.resp.status} occurred: {e.content}")
+            raise
+
+    def get_video_comments(self, video_id: str, max_results: int = 100) -> List[Dict]:
+        """Fetch video comments with pagination support."""
+        try:
+            comments = []
+            request = self.youtube.commentThreads().list(
+                part="snippet",
+                videoId=video_id,
+                maxResults=min(max_results, 100),
+                textFormat="plainText",
+            )
+
+            while request and len(comments) < max_results:
+                response = request.execute()
+
+                for item in response["items"]:
+                    comment = item["snippet"]["topLevelComment"]["snippet"]
+                    comments.append(
+                        {
+                            "text": comment["textDisplay"],
+                            "author": comment["authorDisplayName"],
+                            "likes": comment["likeCount"],
+                            "published_at": comment["publishedAt"],
+                        }
+                    )
+
+                # Get next page of comments if available
+                request = self.youtube.commentThreads().list_next(request, response)
+
+                if len(comments) >= max_results:
+                    break
+
+            return comments[:max_results]
+
+        except HttpError as e:
+            print(f"An HTTP error {e.resp.status} occurred: {e.content}")
+            raise
+
+    def get_video_transcript(
+        self, video_id: str, language_code: str = "en"
+    ) -> Optional[str]:
+        try:
+            transcript = YouTubeTranscriptApi.get_transcript(
+                video_id, languages=[language_code]
+            )
+            return " ".join([entry["text"] for entry in transcript])
         except Exception as e:
-            retries += 1
-            time.sleep(2**retries)
-    return []
+            logging.error(f"Error fetching transcript for video {video_id}: {e}")
+            return None
 
 
 def save_data_to_csv(data, filename):
@@ -121,14 +161,6 @@ def get_user_input(prompt):
     return input(prompt)
 
 
-def save_data_to_csv(data, filename):
-    """
-    Save data to a CSV file.
-    """
-    df = pd.DataFrame(data)
-    df.to_csv(filename, index=False)
-
-
 def get_user_friendly_input():
     """
     Get user-friendly input options for URLs and feedback.
@@ -136,11 +168,3 @@ def get_user_friendly_input():
     url = get_user_input("Enter the YouTube URL: ")
     feedback = get_user_input("Enter your feedback: ")
     return url, feedback
-
-
-def save_data_to_csv(data, filename):
-    """
-    Save data to a CSV file.
-    """
-    df = pd.DataFrame(data)
-    df.to_csv(filename, index=False)

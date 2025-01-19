@@ -1,9 +1,12 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
+from typing import List, Dict, Any
+import logging
+import torch
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
+import sentiment_analysis
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.neural_network import MLPRegressor
 from sklearn.svm import SVR
@@ -12,93 +15,6 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import AdaBoostRegressor
 from sklearn.ensemble import BaggingRegressor
-from sklearn.ensemble import ExtraTreesRegressor
-from sklearn.gaussian_process import GaussianProcessRegressor
-from sklearn.gaussian_process.kernels import RBF
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.pipeline import Pipeline
-from sklearn.linear_model import Ridge
-from sklearn.linear_model import Lasso
-from sklearn.linear_model import ElasticNet
-from sklearn.preprocessing import QuantileTransformer
-from sklearn.preprocessing import PowerTransformer
-from sklearn.preprocessing import RobustScaler
-from sklearn.preprocessing import MaxAbsScaler
-from sklearn.preprocessing import FunctionTransformer
-from sklearn.preprocessing import Binarizer
-from sklearn.preprocessing import LabelEncoder
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.impute import SimpleImputer
-from sklearn.feature_selection import SelectKBest, f_regression
-from sklearn.decomposition import PCA
-from sklearn.cluster import KMeans
-from sklearn.mixture import GaussianMixture
-from sklearn.metrics import silhouette_score
-from sklearn.metrics import calinski_harabasz_score
-from sklearn.metrics import davies_bouldin_score
-from sklearn.metrics import r2_score
-from sklearn.metrics import mean_absolute_error
-from sklearn.metrics import median_absolute_error
-from sklearn.metrics import explained_variance_score
-from sklearn.metrics import max_error
-from sklearn.metrics import mean_squared_log_error
-from sklearn.metrics import mean_poisson_deviance
-from sklearn.metrics import mean_gamma_deviance
-from sklearn.metrics import d2_tweedie_score
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import precision_score
-from sklearn.metrics import recall_score
-from sklearn.metrics import f1_score
-from sklearn.metrics import roc_auc_score
-from sklearn.metrics import roc_curve
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import classification_report
-from sklearn.metrics import log_loss
-from sklearn.metrics import jaccard_score
-from sklearn.metrics import hamming_loss
-from sklearn.metrics import hinge_loss
-from sklearn.metrics import matthews_corrcoef
-from sklearn.metrics import cohen_kappa_score
-from sklearn.metrics import zero_one_loss
-from sklearn.metrics import brier_score_loss
-from sklearn.metrics import average_precision_score
-from sklearn.metrics import balanced_accuracy_score
-from sklearn.metrics import adjusted_rand_score
-from sklearn.metrics import adjusted_mutual_info_score
-from sklearn.metrics import v_measure_score
-from sklearn.metrics import fowlkes_mallows_score
-from sklearn.metrics import homogeneity_score
-from sklearn.metrics import completeness_score
-from sklearn.metrics import mutual_info_score
-from sklearn.metrics import normalized_mutual_info_score
-from sklearn.metrics import rand_score
-from sklearn.metrics import contingency_matrix
-from sklearn.metrics import pairwise_distances
-from sklearn.metrics import pairwise_kernels
-from sklearn.metrics import DistanceMetric
-from sklearn.metrics import make_scorer
-from sklearn.metrics import get_scorer_names
-from sklearn.metrics import SCORERS
-from sklearn.metrics import check_scoring
-from sklearn.metrics import check_pairwise_arrays
-from sklearn.metrics import check_consistent_length
-from sklearn.metrics import check_array
-from sklearn.metrics import check_classification_targets
-from sklearn.metrics import check_regression_targets
-from sklearn.metrics import check_multiclass_multioutput
-from sklearn.metrics import check_scoring_output
-from sklearn.metrics import check_estimator
-from sklearn.metrics import check_random_state
-import sentiment_analysis
-
-
-def analyze_texts(texts, text_type="comment", language="en"):
-    results = sentiment_analysis.perform_sentiment_analysis(texts, language)
-    return results
-
-
-def analyze_sentiment_and_topics(texts, text_type="comment", language="en"):
-    results = sentiment_analysis.perform_sentiment_analysis(texts, language)
     if text_type == "comment":
         topic_results = sentiment_analysis.categorize_comments_by_themes(
             texts, text_type="comment"
@@ -149,3 +65,57 @@ def analyze_truth_and_objectivity(texts, text_type="comment", language="en"):
     return {
         "truth_and_objectivity_analysis": "Truth and objectivity analysis not yet implemented"
     }
+
+
+def detect_toxic_comments(text_inputs):
+    """
+    Detect toxic comments using the toxic-bert model.
+    """
+    # filepath: /workspaces/Fix-my-prebui21YouTube-Insight-Analyzer-Enhanced/advanced_features.py
+    results = []
+    for text in text_inputs:
+        if isinstance(text, dict) and "text" in text:
+            input_text = text["text"]
+            input_type = text.get("type", "comment")
+        else:
+            input_text = text
+            input_type = "comment"
+
+        inputs = toxic_tokenizer(
+            input_text, return_tensors="pt", truncation=True, padding=True
+        )
+        with torch.no_grad():
+            outputs = toxic_model(**inputs)
+
+        probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
+        toxic_score = probs[0][1].item()
+
+        results.append(
+            {
+                "input_text": input_text,
+                "input_type": input_type,
+                "toxic_score": toxic_score,
+                "is_toxic": toxic_score > 0.5,
+            }
+        )
+    return pd.DataFrame(results)
+                "is_toxic": toxic_score > 0.5,            }        )
+    return pd.DataFrame(results)
+
+
+def incorporate_user_feedback(feedback_data, sentiment_data):
+    for feedback in feedback_data:
+        comment_id = feedback["comment_id"]
+        corrected_sentiment = feedback["corrected_sentiment"]
+        sentiment_data.loc[
+            sentiment_data["comment_id"] == comment_id, "corrected_sentiment"
+        ] = corrected_sentiment
+    sentiment_data.to_csv("sentiment_data.csv", index=False)
+    return sentiment_data
+
+
+def categorize_comments_by_themes(
+    texts: List[str], text_type: str = "comment"
+) -> Dict[str, List[str]]:
+    # Implement categorization logic
+    return dict(themes)

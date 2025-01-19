@@ -1,44 +1,162 @@
 <!DOCTYPE html>
-<html>
-<head>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>YouTube Insight Analyzer</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            margin: 20px;
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1 class="mb-4">YouTube Insight Analyzer</h1>
+
+      <!-- URL Input -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Enter YouTube URL</h5>
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control"
+              id="youtubeUrl"
+              placeholder="https://www.youtube.com/watch?v=..."
+            />
+            <button class="btn btn-primary" onclick="analyzeVideo()">
+              Analyze
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Enhanced Results Section -->
+      <div id="results" style="display: none">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="card mb-4">
+              <div class="card-body">
+                <h5 class="card-title">Video Information</h5>
+                <div id="videoInfo"></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card mb-4">
+              <div class="card-body">
+                <h5 class="card-title">Sentiment Analysis</h5>
+                <canvas id="sentimentChart"></canvas>
+                <div
+                  id="analysisProgress"
+                  class="progress mt-3"
+                  style="display: none"
+                >
+                  <div
+                    class="progress-bar progress-bar-striped progress-bar-animated"
+                    role="progressbar"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      async function analyzeVideo() {
+        const url = document.getElementById("youtubeUrl").value;
+        if (!url) return;
+
+        try {
+          // Call analyze endpoint
+          const response = await fetch("/api/analyze", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url }),
+          });
+
+          const data = await response.json();
+          if (!data.success) throw new Error(data.error);
+
+          // Display results
+          document.getElementById("results").style.display = "block";
+          displayVideoInfo(data.metadata);
+          displayAnalysis(data);
+        } catch (error) {
+          alert("Error: " + error.message);
         }
-        h1 {
-            color: #333;
-        }
-        ul {
-            list-style: none;
-            padding: 0;
-        }
-        li {
-            margin-bottom: 10px;
-        }
-        a {
-            text-decoration: none;
-            color: #007bff;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-    <h1>YouTube Insight Analyzer</h1>
-    <p>Welcome to the YouTube Insight Analyzer web UI.</p>
-    <ul>
-        <li><a href="/analysis">Analysis</a></li>
-        <li><a href="/scraping">Scraping</a></li>
-        <li><a href="/configuration">Configuration</a></li>
-        <li><a href="/examples">Examples</a></li>
-        <li><a href="/video-metadata?video_id=dQw4w9WgXcQ">Video Metadata (Example)</a></li>
-        <li><a href="/sentiment-results?video_id=dQw4w9WgXcQ">Sentiment Results (Example)</a></li>
-        <li><a href="/visualization/heatmap?video_id=dQw4w9WgXcQ">Heatmap Visualization (Example)</a></li>
-        <li><a href="/visualization/wordcloud?video_id=dQw4w9WgXcQ">Word Cloud Visualization (Example)</a></li>
-        <li><a href="/visualization/sentiment-distribution?video_id=dQw4w9WgXcQ">Sentiment Distribution (Example)</a></li>
-    </ul>
-</body>
+      }
+
+      function displayVideoInfo(metadata) {
+        document.getElementById("videoInfo").innerHTML = `
+            <p><strong>Title:</strong> ${metadata.title}</p>
+            <p><strong>Channel:</strong> ${metadata.channelTitle}</p>
+            <p><strong>View Count:</strong> ${metadata.viewCount}</p>
+            <p><strong>Like Count:</strong> ${metadata.likeCount}</p>
+            <p><strong>Comment Count:</strong> ${metadata.commentCount}</p>
+        `;
+      }
+
+      function displayAnalysis(data) {
+        document.getElementById("analysisResults").innerHTML = `
+            <p>Retrieved ${data.commentCount} comments</p>
+            <h6>Sample Comments:</h6>
+            <ul>
+                ${data.comments.map((c) => `<li>${c.text}</li>`).join("")}
+            </ul>
+        `;
+      }
+
+      let pollInterval;
+
+      async function pollSentimentResults(jobId) {
+        const progress = document.getElementById("analysisProgress");
+        progress.style.display = "block";
+
+        pollInterval = setInterval(async () => {
+          const response = await fetch(`/api/sentiment/${jobId}`);
+          const data = await response.json();
+
+          if (data.status === "completed") {
+            clearInterval(pollInterval);
+            displaySentimentResults(data.results);
+            progress.style.display = "none";
+          } else {
+            // Update progress bar
+            progress.querySelector(
+              ".progress-bar"
+            ).style.width = `${data.progress}%`;
+          }
+        }, 2000);
+      }
+
+      document
+        .getElementById("url-form")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const url = document.getElementById("url").value;
+          const response = await fetch("/input-url", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ url }),
+          });
+          const result = await response.json();
+          document.getElementById("results").innerText = JSON.stringify(
+            result,
+            null,
+            2
+          );
+        });
+    </script>
+  </body>
 </html>
