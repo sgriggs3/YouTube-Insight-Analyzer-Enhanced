@@ -92,26 +92,13 @@ def filter_data():
 @app.route("/real-time")
 def real_time():
     async def connect_websocket_with_retry():
-            [
-                comment["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
-                for comment in comments
-            ]
-        )
-        youtube_api.save_data_to_csv(
-            sentiment_results, f"{video_id}_sentiment_analysis.csv"
-        )
-        return jsonify(
-            {
+        return jsonify({
                 "message": "URL processed successfully",
                 "video_id": video_id,
                 "sentiment_results": sentiment_results,
-            }
-        )
+            })
     except Exception as e:
-        return (
-            jsonify({"message": f"Error processing URL: {str(e)}", "video_id": None}),
-            500,
-        )
+        return jsonify({"message": f"Error processing URL: {str(e)}", "video_id": None}), 500
 
 
 async def process_message(data, connection_id):
