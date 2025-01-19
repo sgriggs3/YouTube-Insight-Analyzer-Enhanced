@@ -96,7 +96,6 @@ def real_time():
                 comment["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
                 for comment in comments
             ]
-        )
         youtube_api.save_data_to_csv(
             sentiment_results, f"{video_id}_sentiment_analysis.csv"
         )

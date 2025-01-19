@@ -675,3 +675,19 @@ This will generate a sentiment distribution analysis chart and save it as an HTM
      "remoteUser": "vscode"
    }
    ```
+
+3. **Expose the Port in Codespaces**:
+
+   - Open the "Ports" tab in the Codespaces interface.
+   - Click on "Add Port" and enter the port number `8080`.
+   - Ensure the port is set to be publicly accessible.
+
+4. **Access the Application via HTTPS URL**:
+
+   - After exposing the port, Codespaces will provide an HTTPS URL to access the application.
+   - Open the provided HTTPS URL in your browser to access the YouTube Insight Analyzer.
+
+5. **Verify the Setup**:
+
+   - Ensure the front-end is installed and built, the backend is running, and the port is exposed in Codespaces.
+   - Confirm that the provided HTTPS URL is accessible in the browser and the application is functioning correctly.

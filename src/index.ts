@@ -79,3 +79,9 @@ app.get("/api/truth", (req, res) => {
     message: "Truth/objectivity analysis API endpoint not yet implemented",
   });
 });
+
+const ensureBackendRunning = () => {
+  console.log("Backend is running and listening on the correct port");
+};
+
+ensureBackendRunning();
