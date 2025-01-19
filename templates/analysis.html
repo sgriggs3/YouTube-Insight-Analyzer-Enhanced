@@ -2,6 +2,34 @@
 <html>
 <head>
     <title>Analysis</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        form {
+            margin-top: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="submit"] {
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input[type="submit"] {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
     <h1>Analysis</h1>
@@ -13,5 +41,31 @@
         <input type="text" id="options" name="options"><br><br>
         <input type="submit" value="Analyze">
     </form>
+    <div id="results"></div>
+    <script>
+        const form = document.querySelector('form');
+        const resultsDiv = document.getElementById('results');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const url = document.getElementById('url').value;
+            const options = document.getElementById('options').value;
+
+            const response = await fetch('/input-url', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ url: url, options: options })
+            });
+
+            const data = await response.json();
+            if (data.message === "URL processed successfully") {
+                resultsDiv.innerHTML = `<p>Video ID: ${data.video_id}</p><p>Sentiment Results: ${JSON.stringify(data.sentiment_results)}</p>`;
+            } else {
+                 resultsDiv.innerHTML = `<p>Error: ${data.message}</p>`;
+            }
+        });
+    </script>
 </body>
 </html>

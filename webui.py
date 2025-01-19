@@ -61,7 +61,13 @@ def input_url():
         youtube_api.save_data_to_csv(
             sentiment_results, f"{video_id}_sentiment_analysis.csv"
         )
-        return jsonify({"message": "URL processed successfully", "video_id": video_id})
+        return jsonify(
+            {
+                "message": "URL processed successfully",
+                "video_id": video_id,
+                "sentiment_results": sentiment_results,
+            }
+        )
     except Exception as e:
         return (
             jsonify({"message": f"Error processing URL: {str(e)}", "video_id": None}),
