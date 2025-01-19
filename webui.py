@@ -39,7 +39,7 @@ def load_config():
 
 
 config = load_config()
-web_ui_port = config.get("web_ui_port", 5000)
+web_ui_port = config.get("web_ui_port", 8080)
 
 # Load data
 data = pd.read_csv("sentiment_data.csv")
