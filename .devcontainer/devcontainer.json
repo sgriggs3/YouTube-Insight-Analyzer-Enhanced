@@ -1,6 +1,14 @@
 {
   "name": "YouTube Insight Analyzer",
   "image": "mcr.microsoft.com/vscode/devcontainers/python:3.9",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "18"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.9"
+    }
+  },
   "settings": {
     "terminal.integrated.defaultProfile.linux": "bash",
     "python.defaultInterpreterPath": "/usr/local/bin/python",
@@ -11,35 +19,26 @@
   },
   "extensions": [
     "ms-python.python",
-    "ms-toolsai.jupyter",
     "ms-python.vscode-pylance",
-    "streetsidesoftware.code-spell-checker",
-    "esbenp.prettier-vscode",
-    "googleapis.vscode-youtube-api",
+    "ms-toolsai.jupyter",
     "dbaeumer.vscode-eslint",
-    "ms-vscode.vscode-typescript-next",
+    "esbenp.prettier-vscode",
     "ms-python.black-formatter"
   ],
-  "postCreateCommand": "pip install -r requirements.txt && python -m nltk.downloader punkt vader_lexicon && pip install google-api-python-client black pylint && npm install",
-  "postStartCommand": "flask run --host=0.0.0.0 --port=8080",
+  "postCreateCommand": "pip install -r requirements.txt && python -m nltk.downloader punkt vader_lexicon && npm install",
   "forwardPorts": [8080],
+  "remoteUser": "vscode",
   "containerEnv": {
     "PYTHONPATH": "${containerWorkspaceFolder}",
-    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
-    "YOUTUBE_API_KEY": "${localEnv:YOUTUBE_API_KEY}"
-  },
-  "features": {
-    "ghcr.io/devcontainers/features/node:1": {},
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.9"
-    }
+    "YOUTUBE_API_KEY": "${localEnv:YOUTUBE_API_KEY}",
+    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}"
   },
   "customizations": {
     "codespaces": {
       "prebuilds": {
         "enabled": true,
         "branches": ["main"],
-        "repository": true
+        "pullRequests": true
       }
     },
     "vscode": {
