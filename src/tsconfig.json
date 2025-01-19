@@ -1,12 +1,30 @@
 {
-  "name": "youtube-insight-analyzer-enhanced",
-  "version": "1.0.0",
-  "scripts": {
-    "build": "tsc -b ./src/tsconfig.json"
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "types": [
+      "node",
+      "jest",
+      "mocha"
+    ],
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "lib": [
+      "es6",
+      "dom"
+    ]
   },
-  "devDependencies": {
-    "@types/node": "^18.0.0",
-    "@types/jest": "^29.0.0",
-    "@types/mocha": "^10.0.0"
-  }
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
