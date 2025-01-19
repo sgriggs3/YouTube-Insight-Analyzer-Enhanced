@@ -1,4 +1,4 @@
 {
-  "youtube_api_key": "AIzaSyDFXxIz_YAYBtlfWON9b9rgowNPTLF46dY",
+  "youtube_api_keys": ["AIzaSyDFXxIz_YAYBtlfWON9b9rgowNPTLF46dY"],
   "data_storage_path": "data"
 }
