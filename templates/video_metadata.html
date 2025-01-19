@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Metadata</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .metadata-item {
+            margin-bottom: 10px;
+        }
+        .metadata-label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Video Metadata</h1>
+    <div id="metadata-container">
+        <p>Enter a YouTube video URL to view its metadata.</p>
+    </div>
+    <script>
+        const metadataContainer = document.getElementById('metadata-container');
+        const urlParams = new URLSearchParams(window.location.search);
+        const videoId = urlParams.get('video_id');
+
+        if (videoId) {
+            fetch(`/api/video-metadata/${videoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        metadataContainer.innerHTML = `
+                            <div class="metadata-item">
+                                <span class="metadata-label">Title:</span> ${data.title}
+                            </div>
+                            <div class="metadata-item">
+                                <span class="metadata-label">Description:</span> ${data.description}
+                            </div>
+                            <div class="metadata-item">
+                                <span class="metadata-label">Channel:</span> ${data.channelTitle}
+                            </div>
+                            <div class="metadata-item">
+                                <span class="metadata-label">Published At:</span> ${data.publishedAt}
+                            </div>
+                            <div class="metadata-item">
+                                <span class="metadata-label">View Count:</span> ${data.viewCount}
+                            </div>
+                            <div class="metadata-item">
+                                <span class="metadata-label">Like Count:</span> ${data.likeCount}
+                            </div>
+                            <div class="metadata-item">
+                                <span class="metadata-label">Comment Count:</span> ${data.commentCount}
+                            </div>
+                        `;
+                    } else {
+                        metadataContainer.innerHTML = '<p>No metadata found for this video.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching metadata:', error);
+                    metadataContainer.innerHTML = '<p>Error fetching metadata.</p>';
+                });
+        }
+    </script>
+</body>
+</html>

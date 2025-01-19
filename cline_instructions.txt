@@ -1,0 +1,11 @@
+**Cline Session 1 Instructions:**
+
+*   **Focus:** Backend Python scripts.
+*   **Files:** `data_visualization.py`, `sentiment_analysis.py`, `transcription.py`, `youtube_api.py`
+*   **Task:** Implement any necessary improvements, bug fixes, or new features in these scripts.
+
+**Cline Session 2 Instructions:**
+
+*   **Focus:** Frontend web UI and related files.
+*   **Files:** `webui.py`, `templates/`, `src/`
+*   **Task:** Implement any necessary improvements, bug fixes, or new features in the web UI, templates, and TypeScript code.

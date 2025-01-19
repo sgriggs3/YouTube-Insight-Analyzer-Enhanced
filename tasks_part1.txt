@@ -1,0 +1,27 @@
+# Tasks for Cline Session 1
+
+## Backend Development
+
+### YouTube API Integration
+*   [ ]  Implement functions to fetch video metadata (title, description, tags, etc.).
+*   [ ]  Implement functions to fetch comments for a given video.
+*   [ ]  Implement functions to fetch video transcripts (if available).
+*   [ ]  Handle API rate limits and errors gracefully.
+*   [ ]  Store fetched data in a structured format.
+*   [ ]  Use the youtube_api.py file to implement the YouTube API integration.
+
+### Sentiment Analysis
+*   [ ]  Implement sentiment analysis on video comments.
+*   [ ]  Implement sentiment analysis on video transcripts.
+*   [ ]  Use a suitable NLP library (e.g., NLTK, spaCy, transformers).
+*   [ ]  Store sentiment scores along with the corresponding text.
+*   [ ]  Use the sentiment_analysis.py file to implement the sentiment analysis functionality.
+
+### Data Storage
+*   [ ]  Choose a suitable data storage mechanism (e.g., SQLite, PostgreSQL, JSON files).
+*   [ ]  Implement functions to store and retrieve data.
+*   [ ]  Ensure data integrity and consistency.
+
+### API Endpoints
+*   [ ]  Create API endpoints for fetching video metadata.
+*   [ ]  Create API endpoints for fetching sentiment analysis results.

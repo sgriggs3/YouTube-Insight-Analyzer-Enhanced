@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import plotly.express as px
@@ -12,6 +13,15 @@ import websockets
 from datetime import datetime
 
 app = Flask(__name__)
+
+
+def load_config():
+    with open("config.json", "r") as f:
+        return json.load(f)
+
+
+config = load_config()
+web_ui_port = config.get("web_ui_port", 5000)
 
 # Load data
 data = pd.read_csv("sentiment_data.csv")
@@ -51,7 +61,7 @@ def input_url():
     url = request.json.get("url")
     try:
         video_id = youtube_api.extract_video_id(url)
-        comments = youtube_api.get_video_comments(video_id, api_key)
+        comments = youtube_api.get_video_comments(video_id)
         sentiment_results = sentiment_analysis.perform_sentiment_analysis(
             [
                 comment["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
@@ -100,6 +110,15 @@ def configuration():
     return render_template("configuration.html")
 
 
+@app.route("/save-configuration", methods=["POST"])
+def save_configuration():
+    config = request.json
+    # In a real application, you would save the configuration to a file or database
+    # For this example, we'll just print the configuration
+    print("Configuration:", config)
+    return jsonify({"message": "Configuration saved successfully"})
+
+
 @app.route("/scraping")
 def scraping():
     return render_template("scraping.html")
@@ -113,6 +132,18 @@ def analysis():
 @app.route("/examples")
 def examples():
     return render_template("examples.html")
+
+
+@app.route("/video-metadata", methods=["GET"])
+def video_metadata():
+    video_id = request.args.get("video_id")
+    return render_template("video_metadata.html", video_id=video_id)
+
+
+@app.route("/sentiment-results", methods=["GET"])
+def sentiment_results():
+    video_id = request.args.get("video_id")
+    return render_template("sentiment_results.html", video_id=video_id)
 
 
 @app.route("/visualization/heatmap", methods=["GET"])
@@ -153,7 +184,7 @@ def input_url_form():
     if request.method == "POST":
         url = request.form.get("url")
         video_id = youtube_api.extract_video_id(url)
-        comments = youtube_api.get_video_comments(video_id, api_key)
+        comments = youtube_api.get_video_comments(video_id)
         sentiment_results = sentiment_analysis.perform_sentiment_analysis(
             [
                 comment["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
@@ -173,15 +204,18 @@ def start_sentiment_analysis():
     options = request.json.get("options")
     results = []
     for url in urls:
-        video_id = youtube_api.extract_video_id(url)
-        comments = youtube_api.get_video_comments(video_id, api_key)
-        sentiment_results = sentiment_analysis.perform_sentiment_analysis(
-            [
-                comment["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
-                for comment in comments
-            ]
-        )
-        results.append(sentiment_results)
+        try:
+            video_id = youtube_api.extract_video_id(url)
+            comments = youtube_api.get_video_comments(video_id)
+            sentiment_results = sentiment_analysis.perform_sentiment_analysis(
+                [
+                    comment["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
+                    for comment in comments
+                ]
+            )
+            results.append(sentiment_results)
+        except Exception as e:
+            results.append({"error": f"Error processing URL: {url}, {str(e)}"})
     return jsonify(
         {"message": "Sentiment analysis started successfully", "results": results}
     )
@@ -212,6 +246,84 @@ def health_check():
     return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()})
 
 
+@app.route("/api/video-metadata/<video_id>", methods=["GET"])
+def api_video_metadata(video_id):
+    metadata = youtube_api.get_video_metadata(video_id)
+    return jsonify(metadata)
+
+
+@app.route("/api/sentiment-analysis/<video_id>", methods=["GET"])
+def api_sentiment_analysis(video_id):
+    comments = youtube_api.get_video_comments(video_id)
+    transcript = youtube_api.get_video_transcript(video_id)
+
+    text_inputs = []
+    if comments:
+        text_inputs.extend(
+            [
+                {
+                    "text": comment["snippet"]["topLevelComment"]["snippet"][
+                        "textDisplay"
+                    ],
+                    "type": "comment",
+                }
+                for comment in comments
+            ]
+        )
+    if transcript:
+        text_inputs.extend(
+            [{"text": item["text"], "type": "transcript"} for item in transcript]
+        )
+
+    sentiment_results = sentiment_analysis.perform_sentiment_analysis(text_inputs)
+    return jsonify(sentiment_results.to_dict(orient="records"))
+
+
+@app.route("/api/visualizations/<video_id>", methods=["GET"])
+def api_visualizations(video_id):
+    comments = youtube_api.get_video_comments(video_id)
+    transcript = youtube_api.get_video_transcript(video_id)
+
+    text_inputs = []
+    if comments:
+        text_inputs.extend(
+            [
+                {
+                    "text": comment["snippet"]["topLevelComment"]["snippet"][
+                        "textDisplay"
+                    ],
+                    "type": "comment",
+                }
+                for comment in comments
+            ]
+        )
+    if transcript:
+        text_inputs.extend(
+            [{"text": item["text"], "type": "transcript"} for item in transcript]
+        )
+
+    sentiment_results = sentiment_analysis.perform_sentiment_analysis(text_inputs)
+
+    output_file = f"{video_id}_visualizations"
+    data_visualization.visualize_sentiment_by_type(sentiment_results, output_file)
+
+    return jsonify(
+        {"message": "Visualizations generated successfully", "output_file": output_file}
+    )
+
+
+import threading
+
+
+async def main():
+    start_server = websockets.serve(real_time_visualization, "localhost", 8765)
+    flask_thread = threading.Thread(
+        target=app.run,
+        kwargs={"debug": True, "port": web_ui_port, "use_reloader": False},
+    )
+    flask_thread.start()
+    await start_server
+
+
 if __name__ == "__main__":
-    start_websocket_server()
-    app.run(debug=True)
+    asyncio.run(main())

@@ -35,9 +35,9 @@
     <h1>Analysis</h1>
     <p>This page will allow you to initiate the analysis process.</p>
     <form>
-        <label for="url">YouTube URL:</label><br>
-        <input type="text" id="url" name="url"><br><br>
-         <label for="options">Analysis Options:</label><br>
+        <label for="urls">YouTube URLs (one per line):</label><br>
+        <textarea id="urls" name="urls" rows="5" cols="50"></textarea><br><br>
+        <label for="options">Analysis Options:</label><br>
         <input type="text" id="options" name="options"><br><br>
         <input type="submit" value="Analyze">
     </form>
@@ -48,22 +48,30 @@
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
-            const url = document.getElementById('url').value;
+            const urls = document.getElementById('urls').value.split('\\n').filter(url => url.trim() !== '');
             const options = document.getElementById('options').value;
+            
+            resultsDiv.innerHTML = '';
 
-            const response = await fetch('/input-url', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ url: url, options: options })
-            });
+            if (urls.length > 0) {
+                const response = await fetch('/start-sentiment-analysis', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ urls: urls, options: options })
+                });
 
-            const data = await response.json();
-            if (data.message === "URL processed successfully") {
-                resultsDiv.innerHTML = `<p>Video ID: ${data.video_id}</p><p>Sentiment Results: ${JSON.stringify(data.sentiment_results)}</p>`;
+                const data = await response.json();
+                if (data.message === "Sentiment analysis started successfully") {
+                    data.results.forEach((result, index) => {
+                        resultsDiv.innerHTML += `<p>URL ${index + 1} Results: ${JSON.stringify(result)}</p><hr>`;
+                    });
+                } else {
+                    resultsDiv.innerHTML = `<p>Error: ${data.message}</p>`;
+                }
             } else {
-                 resultsDiv.innerHTML = `<p>Error: ${data.message}</p>`;
+                resultsDiv.innerHTML = '<p>Please enter at least one URL.</p>';
             }
         });
     </script>

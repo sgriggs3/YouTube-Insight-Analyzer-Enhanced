@@ -43,5 +43,29 @@
         <input type="text" id="theme" name="theme"><br><br>
         <input type="submit" value="Save">
     </form>
+    <script>
+        const form = document.querySelector('form');
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const apiKey = document.getElementById('api_key').value;
+            const language = document.getElementById('language').value;
+            const theme = document.getElementById('theme').value;
+
+            const response = await fetch('/save-configuration', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ api_key: apiKey, language: language, theme: theme })
+            });
+
+            const data = await response.json();
+            if (data.message === "Configuration saved successfully") {
+                alert('Configuration saved successfully!');
+            } else {
+                alert('Error saving configuration.');
+            }
+        });
+    </script>
 </body>
 </html>

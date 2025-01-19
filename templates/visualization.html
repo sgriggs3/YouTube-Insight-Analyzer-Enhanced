@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Data Visualization</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Data Visualization</h1>
+    <div id="visualization-container">
+        <p>This page will display the data visualization.</p>
+        <iframe id="visualization-iframe" width="800" height="600" frameborder="0"></iframe>
+    </div>
+    <script>
+        const visualizationIframe = document.getElementById('visualization-iframe');
+        const urlParams = new URLSearchParams(window.location.search);
+        const visualizationFile = urlParams.get('visualization_file');
+
+        if (visualizationFile) {
+            visualizationIframe.src = visualizationFile;
+        }
+    </script>
+</body>
+</html>

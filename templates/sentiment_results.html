@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sentiment Analysis Results</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .sentiment-item {
+            margin-bottom: 10px;
+        }
+        .sentiment-label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sentiment Analysis Results</h1>
+    <div id="sentiment-container">
+        <p>Enter a YouTube video URL to view its sentiment analysis results.</p>
+    </div>
+    <script>
+        const sentimentContainer = document.getElementById('sentiment-container');
+        const urlParams = new URLSearchParams(window.location.search);
+        const videoId = urlParams.get('video_id');
+
+        if (videoId) {
+            fetch(`/api/sentiment-analysis/${videoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        let resultsHTML = '';
+                        data.forEach(item => {
+                            resultsHTML += `
+                                <div class="sentiment-item">
+                                    <span class="sentiment-label">Text:</span> ${item.text}
+                                </div>
+                                <div class="sentiment-item">
+                                    <span class="sentiment-label">Type:</span> ${item.type}
+                                </div>
+                                <div class="sentiment-item">
+                                    <span class="sentiment-label">Vader Sentiment:</span> ${JSON.stringify(item.vader_sentiment)}
+                                </div>
+                                <div class="sentiment-item">
+                                    <span class="sentiment-label">Hugging Face Sentiment:</span> ${JSON.stringify(item.hf_sentiment)}
+                                </div>
+                                <hr>
+                            `;
+                        });
+                        sentimentContainer.innerHTML = resultsHTML;
+                    } else {
+                        sentimentContainer.innerHTML = '<p>No sentiment analysis results found for this video.</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching sentiment analysis results:', error);
+                    sentimentContainer.innerHTML = '<p>Error fetching sentiment analysis results.</p>';
+                });
+        }
+    </script>
+</body>
+</html>

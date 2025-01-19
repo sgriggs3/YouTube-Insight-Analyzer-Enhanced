@@ -1,0 +1,72 @@
+# Cline Session 1 Instructions: Backend Development
+
+## Focus
+This Cline session will focus on the backend development of the YouTube Insight Analyzer project.
+
+## Tasks
+1.  **YouTube API Integration:**
+    *   Implement functions to fetch video metadata (title, description, tags, etc.).
+    *   Implement functions to fetch comments for a given video.
+    *   Implement functions to fetch video transcripts (if available).
+    *   Handle API rate limits and errors gracefully.
+    *   Store fetched data in a structured format.
+    *   Use the `youtube_api.py` file to implement the YouTube API integration.
+2.  **Sentiment Analysis:**
+    *   Implement sentiment analysis on video comments.
+    *   Implement sentiment analysis on video transcripts.
+    *   Use a suitable NLP library (e.g., NLTK, spaCy, transformers).
+    *   Store sentiment scores along with the corresponding text.
+    *   Use the `sentiment_analysis.py` file to implement the sentiment analysis functionality.
+3.  **Data Visualization:**
+    *   Create functions to generate charts and graphs from the analysis data.
+    *   Use a suitable data visualization library (e.g., matplotlib, seaborn, plotly).
+    *   Implement visualizations for sentiment scores, comment frequency, etc.
+    *   Use the `data_visualization.py` file to implement the data visualization functionality.
+4.  **Data Storage:**
+    *   Choose a suitable data storage mechanism (e.g., SQLite, PostgreSQL, JSON files).
+    *   Implement functions to store and retrieve data.
+    *   Ensure data integrity and consistency.
+5.  **API Endpoints:**
+    *   Create API endpoints for fetching video metadata.
+    *   Create API endpoints for fetching sentiment analysis results.
+    *   Create API endpoints for fetching data visualizations.
+    *   Use a suitable web framework (e.g., Flask, FastAPI).
+    *   Implement proper error handling and response codes.
+
+## Important Notes
+*   Ensure that all code is well-documented and follows best practices.
+*   Coordinate with Cline session 2 to ensure that the API endpoints are compatible with the web UI.
+*   Be aware of the testing and deployment tasks, but they are not the primary focus of this session.
+
+# Cline Session 2 Instructions: Web UI Development
+
+## Focus
+This Cline session will focus on the web UI development of the YouTube Insight Analyzer project.
+
+## Tasks
+1.  **User Interface Design:**
+    *   Design a clean and intuitive user interface.
+    *   Create wireframes or mockups for the web pages.
+    *   Use a suitable UI framework (e.g., React, Vue, Angular, or plain HTML/CSS/JavaScript).
+    *   Ensure the UI is responsive and accessible.
+2.  **User Authentication and Authorization (Optional):**
+    *   Implement user registration and login functionality.
+    *   Implement role-based access control (if needed).
+    *   Secure user credentials and data.
+3.  **Web Pages:**
+    *   Create a page for entering YouTube video URLs.
+    *   Create a page for displaying video metadata.
+    *   Create a page for displaying sentiment analysis results.
+    *   Create a page for displaying data visualizations.
+    *   Create a configuration page for setting API keys and other settings.
+    *   Use the `templates` directory to store the HTML files.
+    *   Use the `webui.py` file to implement the web UI functionality.
+4.  **API Integration:**
+    *   Use JavaScript to make API calls to the backend.
+    *   Display data received from the API in the UI.
+    *   Handle API errors gracefully.
+
+## Important Notes
+*   Ensure that the UI is user-friendly and easy to navigate.
+*   Coordinate with Cline session 1 to ensure that the web UI is compatible with the API endpoints.
+*   Be aware of the testing and deployment tasks, but they are not the primary focus of this session.

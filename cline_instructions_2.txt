@@ -1,0 +1,32 @@
+# Cline Session 2 Instructions: Web UI Development
+
+## Focus
+This Cline session will focus on the web UI development of the YouTube Insight Analyzer project.
+
+## Tasks
+1.  **User Interface Design:**
+    *   Design a clean and intuitive user interface.
+    *   Create wireframes or mockups for the web pages.
+    *   Use a suitable UI framework (e.g., React, Vue, Angular, or plain HTML/CSS/JavaScript).
+    *   Ensure the UI is responsive and accessible.
+2.  **User Authentication and Authorization (Optional):**
+    *   Implement user registration and login functionality.
+    *   Implement role-based access control (if needed).
+    *   Secure user credentials and data.
+3.  **Web Pages:**
+    *   Create a page for entering YouTube video URLs.
+    *   Create a page for displaying video metadata.
+    *   Create a page for displaying sentiment analysis results.
+    *   Create a page for displaying data visualizations.
+    *   Create a configuration page for setting API keys and other settings.
+    *   Use the `templates` directory to store the HTML files.
+    *   Use the `webui.py` file to implement the web UI functionality.
+4.  **API Integration:**
+    *   Use JavaScript to make API calls to the backend.
+    *   Display data received from the API in the UI.
+    *   Handle API errors gracefully.
+
+## Important Notes
+*   Ensure that the UI is user-friendly and easy to navigate.
+*   Coordinate with Cline session 1 to ensure that the web UI is compatible with the API endpoints.
+*   Be aware of the testing and deployment tasks, but they are not the primary focus of this session.
