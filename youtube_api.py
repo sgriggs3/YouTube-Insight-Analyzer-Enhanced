@@ -20,7 +20,7 @@ def authenticate_youtube_api(api_key):
     return {"Authorization": f"Bearer {api_key}"}
 
 
-def get_video_comments(video_id, scrape_type="latest", comment_limit=500):
+def get_video_comments(video_id, scrape_type="latest", comment_limit=500, progress_callback=None):
     api_service_name = "youtube"
     api_version = "v3"
     youtube = googleapiclient.discovery.build(
@@ -51,6 +51,9 @@ def get_video_comments(video_id, scrape_type="latest", comment_limit=500):
         next_page_token = response.get("nextPageToken")
         if not next_page_token:
             break
+
+        if progress_callback:
+            progress_callback(total_comments / comment_limit)
 
     if scrape_type == "random":
         comments = random.sample(comments, min(comment_limit, len(comments)))
