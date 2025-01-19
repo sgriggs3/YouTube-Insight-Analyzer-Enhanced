@@ -1,71 +1,114 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Configuration</title>
     <style>
-        body {
-            font-family: sans-serif;
-            margin: 20px;
-        }
-        h1 {
-            color: #333;
-        }
-        form {
-            margin-top: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input[type="text"], input[type="submit"] {
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        input[type="submit"] {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      h1 {
+        color: #333;
+      }
+      form {
+        margin-top: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      input[type="text"],
+      input[type="submit"] {
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      input[type="submit"] {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Configuration</h1>
     <p>This page will allow you to configure the application settings.</p>
     <form>
-        <label for="api_key">YouTube API Key:</label><br>
-        <input type="text" id="api_key" name="api_key"><br>
-        <label for="language">Language:</label><br>
-        <input type="text" id="language" name="language"><br>
-        <label for="theme">Theme:</label><br>
-        <input type="text" id="theme" name="theme"><br><br>
-        <input type="submit" value="Save">
+      <label for="api_key">YouTube API Key:</label><br />
+      <input type="text" id="api_key" name="api_key" /><br />
+      <label for="language">Language:</label><br />
+      <input type="text" id="language" name="language" /><br />
+      <label for="theme">Theme:</label><br />
+      <input type="text" id="theme" name="theme" /><br /><br />
+      <label for="data_storage_path">Data Storage Path:</label><br />
+      <input
+        type="text"
+        id="data_storage_path"
+        name="data_storage_path"
+      /><br /><br />
+      <label for="sentiment_model">Sentiment Analysis Model:</label><br />
+      <input
+        type="text"
+        id="sentiment_model"
+        name="sentiment_model"
+      /><br /><br />
+      oof the froned end <label for="feedback">Feedback:</label><br />
+      <input type="text" id="feedback" name="feedback" /><br /><br />
+      <input type="submit" value="Save" />
     </form>
     <script>
-        const form = document.querySelector('form');
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const apiKey = document.getElementById('api_key').value;
-            const language = document.getElementById('language').value;
-            const theme = document.getElementById('theme').value;
+      const form = document.querySelector("form");
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const apiKey = document.getElementById("api_key").value;
+        const language = document.getElementById("language").value;
+        const theme = document.getElementById("theme").value;
+        const dataStoragePath =
+          document.getElementById("data_storage_path").value;
+        const sentimentModel = document.getElementById("sentiment_model").value;
+        const feedback = document.getElementById("feedback").value;
 
-            const response = await fetch('/save-configuration', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ api_key: apiKey, language: language, theme: theme })
-            });
-
-            const data = await response.json();
-            if (data.message === "Configuration saved successfully") {
-                alert('Configuration saved successfully!');
-            } else {
-                alert('Error saving configuration.');
-            }
+        const response = await fetch("/save-configuration", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            api_key: apiKey,
+            language: language,
+            theme: theme,
+            data_storage_path: dataStoragePath,
+            sentiment_model: sentimentModel,
+            feedback: feedback,
+          }),
         });
+
+        const data = await response.json();
+        if (data.message === "Configuration saved successfully") {
+          alert("Configuration saved successfully!");
+        } else {
+          alert("Error saving configuration.");
+        }
+
+        const reviewResponse = await fetch("/review-feedback", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ feedback: feedback }),
+        });
+
+        const reviewData = await reviewResponse.json();
+        if (
+          reviewData.message === "Feedback reviewed and refined successfully"
+        ) {
+          alert("Feedback reviewed and refined successfully!");
+        } else {
+          alert("Error reviewing feedback.");
+        }
+      });
     </script>
-</body>
+  </body>
 </html>

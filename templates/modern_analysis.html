@@ -9,48 +9,130 @@
       rel="stylesheet"
     />
     <style>
-      /* Critical CSS inlined for performance */
+      :root {
+        --bg-color: #121212;
+        --primary-color: #1976d2;
+        --text-color: #ffffff;
+        --card-bg: #1e1e1e;
+      }
+
       body {
+        background: var(--bg-color);
+        color: var(--text-color);
+        font-family: system-ui, -apple-system, sans-serif;
         margin: 0;
-        background: #121212;
         opacity: 0;
         animation: fadeIn 0.3s ease-out forwards;
       }
+
+      .modern-nav {
+        background: var(--card-bg);
+        padding: 1rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .nav-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .modern-button {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .modern-button.primary {
+        background: var(--primary-color);
+        color: var(--text-color);
+      }
+
+      .visualization-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1rem;
+        padding: 1rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .chart-card {
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 1rem;
+        min-height: 300px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .progress-container {
+        display: none;
+        margin-top: 1rem;
+      }
+
+      .progress-bar {
+        width: 0%;
+        height: 20px;
+        background-color: #4caf50;
+      }
+
       @keyframes fadeIn {
         to {
           opacity: 1;
         }
       }
+
+      @media (max-width: 768px) {
+        .visualization-grid {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>
-    <div id="app">
-      <nav class="modern-nav">
-        <div class="nav-content">
-          <button id="analyzeBtn" class="modern-button primary">
-            Start Analysis
-          </button>
-          <button id="exportBtn" class="modern-button">Export Results</button>
-        </div>
-      </nav>
+    <nav class="modern-nav">
+      <div class="nav-content">
+        <button id="analyzeBtn" class="modern-button primary">
+          Start Analysis
+        </button>
+        <button id="exportBtn" class="modern-button">Export Results</button>
+      </div>
+    </nav>
 
-      <main class="analysis-container">
-        <div class="visualization-grid">
-          <div class="chart-card sentiment-trend"></div>
-          <div class="chart-card topic-distribution"></div>
-          <div class="chart-card engagement-metrics"></div>
-        </div>
-      </main>
-    </div>
+    <main class="analysis-container">
+      <div class="visualization-grid">
+        <div class="chart-card sentiment-trend"></div>
+        <div class="chart-card topic-distribution"></div>
+        <div class="chart-card engagement-metrics"></div>
+      </div>
+      <div class="progress-container" id="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+    </main>
 
-    <!-- Deferred loading of non-critical resources -->
     <script type="module">
-      // Use intersection observer for lazy loading
+      // Add WebSocket connection for real-time updates
+      const ws = new WebSocket("ws://localhost:8765");
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "scraping_progress") {
+          updateProgressBar(data.progress, data.message);
+        } else {
+          updateCharts(data);
+        }
+      };
+
+      // Lazy load charts when they become visible
       const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            const chart = entry.target;
-            loadChart(chart);
+            loadChart(entry.target);
           }
         });
       });
@@ -58,6 +140,38 @@
       document.querySelectorAll(".chart-card").forEach((card) => {
         observer.observe(card);
       });
+
+      // Initialize analysis
+      document
+        .getElementById("analyzeBtn")
+        .addEventListener("click", async () => {
+          try {
+            const response = await fetch("/start-sentiment-analysis", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                urls: window.urls,
+                scrape_type: document.getElementById("scrape-type").value,
+                comment_limit: parseInt(
+                  document.getElementById("comment-limit").value,
+                  10
+                ),
+              }),
+            });
+            const data = await response.json();
+            updateCharts(data);
+          } catch (error) {
+            console.error("Analysis error:", error);
+          }
+        });
+
+      function updateProgressBar(progress, message) {
+        const progressBar = document.getElementById("progress-bar");
+        const progressContainer = document.getElementById("progress-container");
+        progressBar.style.width = `${progress}%`;
+        progressBar.textContent = `${progress}% - ${message}`;
+        progressContainer.style.display = "block";
+      }
     </script>
   </body>
 </html>

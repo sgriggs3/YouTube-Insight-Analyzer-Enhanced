@@ -24,6 +24,9 @@ from nltk.tokenize import sent_tokenize
 from typing import List, Dict, Any
 import logging
 import random
+from concurrent.futures import ThreadPoolExecutor
+
+logger = logging.getLogger(__name__)
 
 
 def load_config():
@@ -630,4 +633,54 @@ class SentimentAnalyzer:
 
         except Exception as e:
             self.logger.error(f"Error categorizing comments: {e}")
+            raise
+
+
+class RealTimeAnalyzer:
+    def __init__(self, batch_size: int = 100, max_workers: int = 4):
+        self.batch_size = batch_size
+        self.executor = ThreadPoolExecutor(max_workers=max_workers)
+        self.cache = {}
+
+    async def process_batch(self, comments: List[Dict[str, Any]]) -> Dict[str, Any]:
+        try:
+            # Process comments in parallel
+            futures = []
+            for comment in comments:
+                if comment["id"] not in self.cache:
+                    futures.append(
+                        self.executor.submit(self.analyze_single_comment, comment)
+                    )
+
+            # Collect results
+            results = []
+            for future in futures:
+                try:
+                    result = future.result(timeout=5.0)
+                    results.append(result)
+                except Exception as e:
+                    logger.error(f"Error analyzing comment: {e}")
+
+            return {
+                "results": results,
+                "batch_size": len(comments),
+                "processed": len(results),
+            }
+
+        except Exception as e:
+            logger.error(f"Batch processing error: {e}")
+            raise
+
+    def analyze_single_comment(self, comment: Dict[str, Any]) -> Dict[str, Any]:
+        # Cache check
+        if comment["id"] in self.cache:
+            return self.cache[comment["id"]]
+
+        # Analyze
+        try:
+            result = perform_sentiment_analysis(comment["text"])
+            self.cache[comment["id"]] = result
+            return result
+        except Exception as e:
+            logger.error(f"Single comment analysis error: {e}")
             raise

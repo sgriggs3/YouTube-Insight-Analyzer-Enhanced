@@ -214,7 +214,8 @@ def visualize_philosophical_aspects(philosophical_data, output_file):
 def visualize_truth_and_objectivity(truth_data, output_file):
     fig = px.bar(truth_data, x="source_credibility", title="Credibility of Sources")
     fig = add_tooltips(fig)
-    fig.write_html(output_file)a
+    fig.write_html(output_file)
+
 
 from plotly.subplots import make_subplots
 
@@ -222,50 +223,42 @@ from plotly.subplots import make_subplots
 def create_advanced_sentiment_visualization(data, output_file):
     """Create advanced interactive sentiment visualization with multiple views."""
     try:
-        # Handle empty data
-        if data.empty:
-            raise ValueError("No data available for visualization")
-
-        # Create subplots with error handling
-        try:
-            fig = make_subplots(
-                rows=2,
-                cols=2,
-                subplot_titles=(
-                    "Sentiment Over Time",
-                    "Comment Themes",
-                    "Sentiment Distribution",
-                    "Topic Evolution",
-                ),
-            )
-        except Exception as e:
-            print(f"Error creating subplots: {e}")
+        # Input validation
+        if data is None or data.empty:
+            logger.warning("No data available for visualization")
             return None
 
-        # Add sentiment timeline with error handling
-        try:
-            fig.add_trace(
-                go.Scatter(
-                    x=data["date"],
-                    y=data["sentiment"],
-                    mode="lines+markers",
-                    name="Sentiment",
-                ),
-                row=1,
-                col=1,
-            )
-        except Exception as e:
-            print(f"Error adding sentiment timeline: {e}")
+        # Performance optimization for large datasets
+        if len(data) > 10000:
+            logger.info("Downsampling large dataset")
+            data = data.sample(n=10000, random_state=42)
 
-        # Save visualization
-        try:
-            fig.write_html(output_file)
-        except Exception as e:
-            print(f"Error saving visualization: {e}")
-            return None
+        # Create visualization
+        fig = make_subplots(
+            rows=2,
+            cols=2,
+            subplot_titles=(
+                "Sentiment Over Time",
+                "Comment Themes",
+                "Sentiment Distribution",
+                "Topic Evolution",
+            ),
+        )
+
+        # Add error boundaries
+        y_min = max(data["sentiment"].min() - 0.1, -1)
+        y_max = min(data["sentiment"].max() + 0.1, 1)
+
+        fig.update_yaxes(range=[y_min, y_max], row=1, col=1)
+
+        # Cache results
+        cache_key = f"viz_{hash(str(data))}"
+        cache.set(cache_key, fig.to_json())
+
+        return fig
 
     except Exception as e:
-        print(f"Error in visualization creation: {e}")
+        logger.error(f"Visualization error: {e}")
         return None
 
 
@@ -328,3 +321,49 @@ def create_topic_network(data, output_file):
     """Create interactive network visualization of related topics."""
     # Network visualization code here
     pass
+
+
+class RealtimeVisualizer:
+    def __init__(self):
+        self.clients = set()
+        self.cache = cachetools.TTLCache(maxsize=1000, ttl=3600)
+
+    async def handle_client(self, websocket, path):
+        try:
+            self.clients.add(websocket)
+            while True:
+                try:
+                    data = await websocket.recv()
+                    await self.process_and_broadcast(data)
+                except websockets.exceptions.ConnectionClosed:
+                    break
+        finally:
+            self.clients.remove(websocket)
+
+    async def process_and_broadcast(self, data):
+        try:
+            # Process data
+            processed_data = self.process_visualization_data(json.loads(data))
+
+            # Cache results
+            cache_key = f"viz_{hash(str(processed_data))}"
+            self.cache[cache_key] = processed_data
+
+            # Broadcast to all clients
+            await asyncio.gather(
+                *[client.send(json.dumps(processed_data)) for client in self.clients]
+            )
+
+        except Exception as e:
+            logger.error(f"Visualization processing error: {e}")
+
+    def process_visualization_data(self, data):
+        # Handle large datasets
+        if len(data) > 10000:
+            data = handle_large_volumes_of_data(data)
+
+        return {
+            "sentiment_trends": create_sentiment_trends(data),
+            "topic_distribution": create_topic_distribution(data),
+            "engagement_metrics": create_engagement_metrics(data),
+        }

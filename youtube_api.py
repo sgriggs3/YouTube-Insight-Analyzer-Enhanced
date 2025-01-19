@@ -4,6 +4,11 @@ from youtube_transcript_api import YouTubeTranscriptApi
 import json
 import time
 import os
+import logging
+import googleapiclient.discovery
+import random
+
+logger = logging.getLogger(__name__)
 
 
 def load_config():
@@ -15,49 +20,47 @@ def authenticate_youtube_api(api_key):
     return {"Authorization": f"Bearer {api_key}"}
 
 
-def get_video_comments(video_id, options=None):
-    config = load_config()
-    api_key = config.get("youtube_api_key")
+def get_video_comments(video_id, scrape_type="latest", comment_limit=500):
+    api_service_name = "youtube"
+    api_version = "v3"
+    youtube = googleapiclient.discovery.build(
+        api_service_name, api_version, developerKey=API_KEY
+    )
+
     comments = []
     next_page_token = None
+    total_comments = 0
 
-    # Default options
-    default_options = {"limit": 1000, "sort_by": "relevance", "include_replies": True}
-    options = {**default_options, **(options or {})}
+    while total_comments < comment_limit:
+        request = youtube.commentThreads().list(
+            part="snippet",
+            videoId=video_id,
+            maxResults=min(100, comment_limit - total_comments),
+            pageToken=next_page_token,
+            order="time" if scrape_type == "latest" else "relevance",
+        )
+        response = request.execute()
 
-    while True:
-        try:
-            url = f"https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}&maxResults=100"
-            if next_page_token:
-                url += f"&pageToken={next_page_token}"
+        for item in response.get("items", []):
+            comment = item["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
+            if scrape_type == "non_spam" and is_spam(comment):
+                continue
+            comments.append(comment)
+            total_comments += 1
 
-            # Add sorting options
-            if options["sort_by"] == "time":
-                url += "&order=time"
-
-            response = requests.get(url)
-            if response.status_code == 200:
-                data = response.json()
-                comments.extend(data.get("items", []))
-
-                # Save progress
-                save_scraping_progress(video_id, len(comments), options["limit"])
-
-                next_page_token = data.get("nextPageToken")
-                if not next_page_token or len(comments) >= options["limit"]:
-                    break
-
-            elif response.status_code == 403:
-                handle_rate_limit()
-            else:
-                handle_error(response)
-                break
-
-        except Exception as e:
-            log_error(e)
+        next_page_token = response.get("nextPageToken")
+        if not next_page_token:
             break
 
+    if scrape_type == "random":
+        comments = random.sample(comments, min(comment_limit, len(comments)))
+
     return comments
+
+
+def is_spam(comment):
+    # Implement spam detection logic here
+    return False
 
 
 def save_scraping_progress(video_id, current_count, total):

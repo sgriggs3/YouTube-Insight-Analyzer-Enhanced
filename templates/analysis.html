@@ -1,79 +1,133 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <title>Analysis</title>
     <style>
-        body {
-            font-family: sans-serif;
-            margin: 20px;
-        }
-        h1 {
-            color: #333;
-        }
-        form {
-            margin-top: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input[type="text"], input[type="submit"] {
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        input[type="submit"] {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
+      body {
+        font-family: sans-serif;
+        margin: 20px;
+      }
+      h1 {
+        color: #333;
+      }
+      form {
+        margin-top: 20px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      input[type="text"],
+      input[type="submit"] {
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      input[type="submit"] {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <h1>Analysis</h1>
     <p>This page will allow you to initiate the analysis process.</p>
     <form>
-        <label for="urls">YouTube URLs (one per line):</label><br>
-        <textarea id="urls" name="urls" rows="5" cols="50"></textarea><br><br>
-        <label for="options">Analysis Options:</label><br>
-        <input type="text" id="options" name="options"><br><br>
-        <input type="submit" value="Analyze">
+      <label for="urls">YouTube URLs (one per line):</label><br />
+      <textarea id="urls" name="urls" rows="5" cols="50"></textarea><br /><br />
+      <label for="options">Analysis Options:</label><br />
+      <input type="text" id="options" name="options" /><br /><br />
+      <input type="submit" value="Analyze" />
     </form>
+    <div id="progress-container" style="display: none">
+      <div
+        id="progress-bar"
+        style="width: 0%; height: 20px; background-color: #4caf50"
+      ></div>
+    </div>
     <div id="results"></div>
+    <div
+      id="error-container"
+      class="error-message"
+      style="display: none; color: red"
+    ></div>
     <script>
-        const form = document.querySelector('form');
-        const resultsDiv = document.getElementById('results');
+      const form = document.querySelector("form");
+      const resultsDiv = document.getElementById("results");
+      const progressBar = document.getElementById("progress-bar");
+      const progressContainer = document.getElementById("progress-container");
+      const errorContainer = document.getElementById("error-container");
 
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const urls = document.getElementById('urls').value.split('\\n').filter(url => url.trim() !== '');
-            const options = document.getElementById('options').value;
-            
-            resultsDiv.innerHTML = '';
+      async function handleAnalysis(urls, options) {
+        try {
+          // Validate input
+          if (!urls?.length) {
+            throw new Error("Please enter at least one URL");
+          }
 
-            if (urls.length > 0) {
-                const response = await fetch('/start-sentiment-analysis', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ urls: urls, options: options })
-                });
+          const response = await fetch("/start-sentiment-analysis", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ urls, options }),
+          });
 
-                const data = await response.json();
-                if (data.message === "Sentiment analysis started successfully") {
-                    data.results.forEach((result, index) => {
-                        resultsDiv.innerHTML += `<p>URL ${index + 1} Results: ${JSON.stringify(result)}</p><hr>`;
-                    });
-                } else {
-                    resultsDiv.innerHTML = `<p>Error: ${data.message}</p>`;
-                }
-            } else {
-                resultsDiv.innerHTML = '<p>Please enter at least one URL.</p>';
-            }
-        });
+          if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+          }
+
+          const data = await response.json();
+          return data;
+        } catch (error) {
+          errorContainer.textContent = `Error: ${error.message}`;
+          errorContainer.style.display = "block";
+          throw error;
+        }
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        errorContainer.style.display = "none";
+        progressContainer.style.display = "block";
+
+        try {
+          const urls = document
+            .getElementById("urls")
+            .value.split("\n")
+            .map((url) => url.trim())
+            .filter(Boolean);
+
+          const options = document.getElementById("options").value;
+          const data = await handleAnalysis(urls, options);
+          displayResults(data);
+        } catch (error) {
+          console.error(error);
+          progressContainer.style.display = "none";
+        }
+      });
+
+      function displayResults(data) {
+        if (data.message === "Sentiment analysis started successfully") {
+          const numUrls = data.results.length;
+          let completedUrls = 0;
+          data.results.forEach((result, index) => {
+            resultsDiv.innerHTML += `<p>URL ${
+              index + 1
+            } Results: ${JSON.stringify(result)}</p><hr>`;
+            completedUrls++;
+            const progress = (completedUrls / numUrls) * 100;
+            progressBar.style.width = `${progress}%`;
+          });
+          progressContainer.style.display = "none";
+        } else {
+          resultsDiv.innerHTML = `<p>Error: ${data.message}</p>`;
+          progressContainer.style.display = "none";
+        }
+      }
     </script>
-</body>
+  </body>
 </html>
