@@ -1,4 +1,5 @@
 name: "Main Branch Prebuild"
+
 on:
   push:
     branches:
@@ -6,16 +7,32 @@ on:
   pull_request:
     branches:
       - main
+
 jobs:
   prebuild:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Dev Container
-        uses: microsoft/vscode-dev-containers/actions/setup@v1
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          image: mcr.microsoft.com/vscode/devcontainers/python:3.9
-      - name: Install Dependencies
+          node-version: '18'
+          
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          
+      - name: Install Node.js Dependencies
+        run: |
+          npm install
+          
+      - name: Install Python Dependencies
         run: |
           pip install -r requirements.txt
           python -m nltk.downloader punkt vader_lexicon
+          
+      - name: Build TypeScript
+        run: |
+          npm run build
