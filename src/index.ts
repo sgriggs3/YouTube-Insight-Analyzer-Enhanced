@@ -43,38 +43,32 @@ app.get("/api/comments", async (req, res) => {
 });
 
 app.get("/api/opinion", (req, res) => {
-  // Placeholder for opinion prediction API endpoint
   res.send({ message: "Opinion prediction API endpoint not yet implemented" });
 });
 
 app.get("/api/bias", (req, res) => {
-  // Placeholder for bias detection API endpoint
   res.send({ message: "Bias detection API endpoint not yet implemented" });
 });
 
 app.get("/api/social", (req, res) => {
-  // Placeholder for social issue analysis API endpoint
   res.send({
     message: "Social issue analysis API endpoint not yet implemented",
   });
 });
 
 app.get("/api/psychological", (req, res) => {
-  // Placeholder for psychological analysis API endpoint
   res.send({
     message: "Psychological analysis API endpoint not yet implemented",
   });
 });
 
 app.get("/api/philosophical", (req, res) => {
-  // Placeholder for philosophical analysis API endpoint
   res.send({
     message: "Philosophical analysis API endpoint not yet implemented",
   });
 });
 
 app.get("/api/truth", (req, res) => {
-  // Placeholder for truth/objectivity analysis API endpoint
   res.send({
     message: "Truth/objectivity analysis API endpoint not yet implemented",
   });

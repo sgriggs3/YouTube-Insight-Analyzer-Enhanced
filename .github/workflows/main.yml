@@ -60,6 +60,16 @@ jobs:
     - name: Build
       run: npm run build
 
+    - name: Deploy backend
+      run: |
+        echo "Deploying backend..."
+        # Add your backend deployment commands here
+
+    - name: Deploy frontend
+      run: |
+        echo "Deploying frontend..."
+        # Add your frontend deployment commands here
+
   prebuild:
     needs: build
     runs-on: ubuntu-latest

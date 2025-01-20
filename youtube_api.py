@@ -32,24 +32,31 @@ def get_video_comments(video_id, scrape_type="latest", comment_limit=500):
     total_comments = 0
 
     while total_comments < comment_limit:
-        request = youtube.commentThreads().list(
-            part="snippet",
-            videoId=video_id,
-            maxResults=min(100, comment_limit - total_comments),
-            pageToken=next_page_token,
-            order="time" if scrape_type == "latest" else "relevance",
-        )
-        response = request.execute()
+        try:
+            request = youtube.commentThreads().list(
+                part="snippet",
+                videoId=video_id,
+                maxResults=min(100, comment_limit - total_comments),
+                pageToken=next_page_token,
+                order="time" if scrape_type == "latest" else "relevance",
+            )
+            response = request.execute()
 
-        for item in response.get("items", []):
-            comment = item["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
-            if scrape_type == "non_spam" and is_spam(comment):
-                continue
-            comments.append(comment)
-            total_comments += 1
+            for item in response.get("items", []):
+                comment = item["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
+                if scrape_type == "non_spam" and is_spam(comment):
+                    continue
+                comments.append(comment)
+                total_comments += 1
 
-        next_page_token = response.get("nextPageToken")
-        if not next_page_token:
+            next_page_token = response.get("nextPageToken")
+            if not next_page_token:
+                break
+        except googleapiclient.errors.HttpError as e:
+            logger.error(f"HTTP error while fetching comments: {e}")
+            time.sleep(2)
+        except Exception as e:
+            logger.error(f"Unexpected error while fetching comments: {e}")
             break
 
     if scrape_type == "random":
@@ -75,15 +82,20 @@ def get_video_metadata(video_id, max_retries=5):
     url = f"https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id={video_id}&key={api_key}"
     retries = 0
     while retries < max_retries:
-        response = requests.get(url)
-        if response.status_code == 200:
-            metadata = response.json().get("items", [])
-            return metadata
-        elif response.status_code == 403:
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                metadata = response.json().get("items", [])
+                return metadata
+            elif response.status_code == 403:
+                retries += 1
+                time.sleep(2**retries)
+            else:
+                return []
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request error while fetching metadata: {e}")
             retries += 1
             time.sleep(2**retries)
-        else:
-            return []
     return []
 
 
@@ -94,6 +106,7 @@ def get_video_transcript(video_id, max_retries=5):
             transcript = YouTubeTranscriptApi.get_transcript(video_id)
             return transcript
         except Exception as e:
+            logger.error(f"Error fetching transcript: {e}")
             retries += 1
             time.sleep(2**retries)
     return []

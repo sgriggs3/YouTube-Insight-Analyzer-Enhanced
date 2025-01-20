@@ -2,5 +2,14 @@
   "youtube_api_key": "",
   "data_storage_path": "data",
   "sentiment_model": "vader",
-  "web_ui_port": 5000
+  "web_ui_port": 5000,
+  "api_endpoints": {
+    "comments": "/api/comments",
+    "opinion": "/api/opinion",
+    "bias": "/api/bias",
+    "social": "/api/social",
+    "psychological": "/api/psychological",
+    "philosophical": "/api/philosophical",
+    "truth": "/api/truth"
+  }
 }

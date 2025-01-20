@@ -3,6 +3,8 @@ import sentiment_analysis
 import transcription
 import data_visualization
 import pandas as pd
+import pytest
+import os
 
 def test_system_on_political_content(video_ids, api_key):
     for video_id in video_ids:
@@ -41,3 +43,34 @@ def test_user_input_and_feedback():
     sentiment_data = pd.read_csv('sentiment_data.csv')
     updated_sentiment_data = sentiment_analysis.incorporate_user_feedback(feedback, sentiment_data)
     updated_sentiment_data.to_csv('sentiment_data.csv', index=False)
+
+# Automated tests for backend using pytest
+
+def test_get_video_comments():
+    video_id = "example_video_id"
+    comments = youtube_api.get_video_comments(video_id, "api_key")
+    assert len(comments) > 0
+
+def test_get_video_metadata():
+    video_id = "example_video_id"
+    metadata = youtube_api.get_video_metadata(video_id, "api_key")
+    assert metadata is not None
+
+def test_perform_sentiment_analysis():
+    comments = ["This is a great video!", "I didn't like this video."]
+    sentiment_results = sentiment_analysis.perform_sentiment_analysis(comments)
+    assert len(sentiment_results) == 2
+
+def test_transcribe_youtube_video():
+    video_id = "example_video_id"
+    transcription_result = transcription.transcribe_youtube_video(video_id)
+    assert transcription_result is not None
+
+def test_visualize_sentiment_trends():
+    sentiment_data = pd.DataFrame({
+        "date": ["2023-01-01", "2023-01-02"],
+        "sentiment": [0.5, -0.2]
+    })
+    output_file = "test_sentiment_trends.png"
+    data_visualization.visualize_sentiment_trends(sentiment_data, output_file)
+    assert os.path.exists(output_file)
