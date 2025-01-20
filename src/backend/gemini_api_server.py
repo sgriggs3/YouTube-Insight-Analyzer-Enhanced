@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import os
-from google.generativeai import GenerativeModel, APIError
+from google.generativeai import GenerativeModel
 
 # Configure logging
 logging.basicConfig(
@@ -45,17 +45,11 @@ class GeminiAPIServer:
             response = await self.model.generate_content_async(prompt)
             logging.info(f"Gemini API call successful.")
             return response
-        except APIError as e:
-            logging.error(f"Gemini API error: {e}")
-            if "rate limit" in str(e).lower():
-                logging.warning("Rate limit error detected, rotating API key.")
-                self._rotate_api_key()
-                return await self.call_gemini_api(prompt)  # Retry with the new key
-            else:
-                return None
         except Exception as e:
-            logging.error(f"An unexpected error occurred: {e}")
-            return None
+            logging.error(f"Gemini API error: {e}")
+            logging.warning("Rate limit error detected, rotating API key.")
+            self._rotate_api_key()
+            return await self.call_gemini_api(prompt)  # Retry with the new key
 
 
 async def main():
