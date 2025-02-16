@@ -17,6 +17,7 @@ import msgpack
 import uuid
 import logging
 from functools import wraps
+from pathlib import Path
 
 app = Flask(__name__)
 
@@ -30,7 +31,79 @@ def init_app(app):
     app.config["COMPRESS_MIN_SIZE"] = 500
 
 
-init_app(app)
+def load_config():
+    """Load config with defaults if file doesn't exist"""
+    config_path = Path("config.json")
+    defaults = {
+        "web_ui_port": 5000,
+        "debug": False,
+        "api_keys": [],
+        "cache_dir": "cache",
+        "log_level": "INFO"
+    }
+    
+    if config_path.exists():
+        with open(config_path) as f:
+            return {**defaults, **json.load(f)}
+    else:
+        # Create default config
+        with open(config_path, "w") as f:
+            json.dump(defaults, f, indent=2)
+        return defaults
+
+def init_directories():
+    """Create required directories"""
+    dirs = ["cache", "data", "logs"]
+    for dir in dirs:
+        Path(dir).mkdir(exist_ok=True)
+
+def init_app(app):
+    """Initialize Flask app with proper config"""
+    config = load_config()
+    
+    # Configure logging
+    logging.basicConfig(
+        level=getattr(logging, config.get("log_level", "INFO")),
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler("logs/app.log"),
+            logging.StreamHandler()
+        ]
+    )
+    
+    # Initialize directories
+    init_directories()
+    
+    # Configure Flask
+    app.config.update(
+        SECRET_KEY=os.urandom(24),
+        COMPRESS_ALGORITHM=["br", "gzip"],
+        COMPRESS_LEVEL=6,
+        COMPRESS_MIN_SIZE=500,
+        TEMPLATES_AUTO_RELOAD=True
+    )
+    
+    # Initialize extensions
+    Compress(app)
+    CORS(app)
+    
+    return app
+
+try:
+    # Create Flask app
+    app = Flask(__name__)
+    app = init_app(app)
+    
+    # Load initial data if exists
+    data_file = Path("data/sentiment_data.csv") 
+    if data_file.exists():
+        data = pd.read_csv(data_file)
+    else:
+        data = pd.DataFrame()
+        
+except Exception as e:
+    logging.error(f"Failed to initialize app: {e}")
+    raise
 
 
 def load_config():
