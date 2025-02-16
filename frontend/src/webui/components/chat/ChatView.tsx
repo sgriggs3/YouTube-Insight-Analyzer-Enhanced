@@ -1,6 +1,6 @@
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { VSCodeButton, VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import debounce from "debounce"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDeepCompareEffect, useEvent, useMount } from "react-use"
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso"
 import styled from "styled-components"
@@ -10,11 +10,11 @@ import {
 	ClineSayBrowserAction,
 	ClineSayTool,
 	ExtensionMessage,
-} from "../../../../src/shared/ExtensionMessage"
-import { findLast } from "../../../../src/shared/array"
-import { combineApiRequests } from "../../../../src/shared/combineApiRequests"
-import { combineCommandSequences } from "../../../../src/shared/combineCommandSequences"
-import { getApiMetrics } from "../../../../src/shared/getApiMetrics"
+} from "../shared/ExtensionMessage"
+import { findLast } from "../shared/array"
+import { combineApiRequests } from "../shared/combineApiRequests"
+import { combineCommandSequences } from "../shared/combineCommandSequences"
+import { getApiMetrics } from "../shared/getApiMetrics"
 import { useExtensionState } from "../../context/ExtensionStateContext"
 import { vscode } from "../../utils/vscode"
 import HistoryPreview from "../history/HistoryPreview"
@@ -68,7 +68,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 	const secondLastMessage = useMemo(() => messages.at(-2), [messages])
 	useDeepCompareEffect(() => {
 		// if last message is an ask, show user ask UI
-		// if user finished a task, then start a new task with a new conversation history since in this moment that the extension is waiting for user response, the user could close the extension and the conversation history would be lost.
+		// if user finished a task, then start a new task with a new conversation history since in this moment that the extension is waiting for user response, the user could close the extension and the conversation history would be lost.o
 		// basically as long as a task is active, the conversation history will be persisted
 		if (lastMessage) {
 			switch (lastMessage.type) {
@@ -254,12 +254,58 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 		return false
 	}, [modifiedMessages, clineAsk, enableButtons, primaryButtonText])
 
+    const handleSaveCsv = useCallback(async () => {
+        const videoUrl = inputValue; // Or get it from state if you store it separately
+        if (!videoUrl) {
+            vscode.postMessage({ type: "showError", message: "Please enter a YouTube URL first." });
+            return;
+        }
+        try {
+            const response = await fetch(`/api/comments/csv?urlOrVideoId=${videoUrl}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            if (data.status === "success") {
+                // Trigger download in VS Code
+                vscode.postMessage({ type: "downloadFile", content: data.csv_content, filename: data.file });
+            } else {
+                vscode.postMessage({ type: "showError", message: data.error || "Failed to save comments to CSV." });
+            }
+        } catch (error) {
+            vscode.postMessage({ type: "showError", message: error.message || "Error saving comments to CSV." });
+        }
+    }, [inputValue]);
+
+    const handleSentimentAnalysis = useCallback(async () => {
+        const videoUrl = inputValue; // Or get it from state
+        if (!videoUrl) {
+            vscode.postMessage({ type: "showError", message: "Please enter a YouTube URL first." });
+            return;
+        }
+        try {
+            const response = await fetch(`/api/sentiment-analysis?urlOrVideoId=${videoUrl}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            if (data.status === "success") {
+                // Display sentiment analysis results in a new webview or panel
+                vscode.postMessage({ type: "showAnalysisResults", results: data.sentiment_results });
+            } else {
+                vscode.postMessage({ type: "showError", message: data.error || "Failed to perform sentiment analysis." });
+            }
+        } catch (error) {
+            vscode.postMessage({ type: "showError", message: error.message || "Error performing sentiment analysis." });
+        }
+    }, [inputValue]);
+
 	const handleSendMessage = useCallback(
-		(text: string, images: string[]) => {
+		(text: string, images: string[], youtubeUrl: string) => { // Added youtubeUrl parameter
 			text = text.trim()
-			if (text || images.length > 0) {
+			if (text || images.length > 0 || youtubeUrl) { // Include youtubeUrl in the condition
 				if (messages.length === 0) {
-					vscode.postMessage({ type: "newTask", text, images })
+					vscode.postMessage({ type: "newTask", text, images, youtubeUrl }) // Send youtubeUrl in newTask message
 				} else if (clineAsk) {
 					switch (clineAsk) {
 						case "followup":
@@ -292,8 +338,8 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				disableAutoScrollRef.current = false
 			}
 		},
-		[messages.length, clineAsk],
-	)
+		[messages.length, clineAsk]
+	);
 
 	const startNewTask = useCallback(() => {
 		vscode.postMessage({ type: "clearTask" })
@@ -397,7 +443,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				case "invoke":
 					switch (message.invoke!) {
 						case "sendMessage":
-							handleSendMessage(message.text ?? "", message.images ?? [])
+							handleSendMessage(message.text ?? "", message.images ?? [], "") // Pass empty string for youtubeUrl
 							break
 						case "primaryButtonClick":
 							handlePrimaryButtonClick()
@@ -410,7 +456,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			// textAreaRef.current is not explicitly required here since react gaurantees that ref will be stable across re-renders, and we're not using its value but its reference.
 		},
 		[
-			isHidden,
+			isHidden, // this is not needed here since it's not used in the function
 			textAreaDisabled,
 			enableButtons,
 			handleSendMessage,
@@ -582,7 +628,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			const isLast = Array.isArray(lastGroup) ? lastGroup[0].ts === ts : lastGroup?.ts === ts
 			const secondToLastGroup = groupedMessages.at(-2)
 			const isSecondToLast = Array.isArray(secondToLastGroup)
-				? secondToLastGroup[0].ts === ts
+				? secondToLastGroup[0].ts === ts // this is not needed here since it's not used in the function
 				: secondToLastGroup?.ts === ts
 
 			const isLastCollapsedApiReq =
@@ -642,7 +688,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 			}
 		},
 		[scrollToBottomSmooth, scrollToBottomAuto],
-	)
+	);
 
 	useEffect(() => {
 		if (!disableAutoScrollRef.current) {
@@ -811,7 +857,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 							}}
 							// increasing top by 3_000 to prevent jumping around when user collapses a row
 							increaseViewportBy={{ top: 3_000, bottom: Number.MAX_SAFE_INTEGER }} // hack to make sure the last message is always rendered to get truly perfect scroll to bottom animation when new messages are added (Number.MAX_SAFE_INTEGER is safe for arithmetic operations, which is all virtuoso uses this value for in src/sizeRangeSystem.ts)
-							data={groupedMessages} // messages is the raw format returned by extension, modifiedMessages is the manipulated structure that combines certain messages of related type, and visibleMessages is the filtered structure that removes messages that should not be rendered
+							data={groupedMessages}
 							itemContent={itemContent}
 							atBottomStateChange={(isAtBottom) => {
 								setIsAtBottom(isAtBottom)
@@ -870,14 +916,23 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 									style={{
 										flex: isStreaming ? 2 : 1,
 										marginLeft: isStreaming ? 0 : "6px",
-									}}
+										}}
 									onClick={handleSecondaryButtonClick}>
 									{isStreaming ? "Cancel" : secondaryButtonText}
 								</VSCodeButton>
-							)}
+							)} 
 						</div>
 					)}
-				</>
+
+                    <div style={{display: "flex", padding: "10px 15px 0px 15px"}}>
+                        <VSCodeButton appearance="secondary" style={{flex: 1, marginRight: "6px"}} onClick={() => handleSaveCsv()}>
+                            Save CSV
+                        </VSCodeButton>
+                        <VSCodeButton appearance="secondary" style={{flex: 1, marginLeft: "6px"}} onClick={() => handleSentimentAnalysis()}>
+                            Sentiment Analysis
+                        </VSCodeButton>
+                    </div>
+                </>
 			)}
 			<ChatTextArea
 				ref={textAreaRef}
@@ -887,7 +942,7 @@ const ChatView = ({ isHidden, showAnnouncement, hideAnnouncement, showHistoryVie
 				placeholderText={placeholderText}
 				selectedImages={selectedImages}
 				setSelectedImages={setSelectedImages}
-				onSend={() => handleSendMessage(inputValue, selectedImages)}
+				onSend={(text, images, youtubeUrl) => handleSendMessage(text, images, youtubeUrl)} // Modified onSend prop to pass youtubeUrl
 				onSelectImages={selectImages}
 				shouldDisableImages={shouldDisableImages}
 				onHeightChange={() => {

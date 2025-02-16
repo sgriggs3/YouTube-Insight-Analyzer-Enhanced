@@ -1,17 +1,30 @@
-import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
-import DynamicTextArea from "react-textarea-autosize"
-import { mentionRegex, mentionRegexGlobal } from "../../../../src/shared/context-mentions"
-import { useExtensionState } from "../../context/ExtensionStateContext"
+import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import DynamicTextArea from "react-textarea-autosize";
+import { mentionRegex, mentionRegexGlobal } from "../../../../../src/shared/context-mentions";
+import { useExtensionState } from "../../context/ExtensionStateContext";
+import styled from "styled-components";
 import {
 	ContextMenuOptionType,
 	getContextMenuOptions,
 	insertMention,
 	removeMention,
 	shouldShowContextMenu,
-} from "../../utils/context-mentions"
-import { MAX_IMAGES_PER_MESSAGE } from "./ChatView"
-import ContextMenu from "./ContextMenu"
-import Thumbnails from "../common/Thumbnails"
+} from "../../utils/context-mentions";
+import { MAX_IMAGES_PER_MESSAGE } from "./ChatView";
+import ContextMenu from "./ContextMenu";
+import Thumbnails from "../common/Thumbnails";
+
+const YouTubeUrlInput = styled.input`
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 8px;
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 2px;
+  background-color: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-editor-font-size);
+`;
 
 interface ChatTextAreaProps {
 	inputValue: string
@@ -20,7 +33,7 @@ interface ChatTextAreaProps {
 	placeholderText: string
 	selectedImages: string[]
 	setSelectedImages: React.Dispatch<React.SetStateAction<string[]>>
-	onSend: () => void
+	onSend: (text: string, images: string[], youtubeUrl: string) => void // Modified onSend to accept youtubeUrl
 	onSelectImages: () => void
 	shouldDisableImages: boolean
 	onHeightChange?: (height: number) => void
@@ -56,7 +69,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 		const [selectedType, setSelectedType] = useState<ContextMenuOptionType | null>(null)
 		const [justDeletedSpaceAfterMention, setJustDeletedSpaceAfterMention] = useState(false)
 		const [intendedCursorPosition, setIntendedCursorPosition] = useState<number | null>(null)
-		const contextMenuContainerRef = useRef<HTMLDivElement>(null)
+    const [youtubeUrl, setYoutubeUrl] = useState(""); // Added youtubeUrl state
 
 		const queryItems = useMemo(() => {
 			return [
@@ -201,7 +214,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				const isComposing = event.nativeEvent?.isComposing ?? false
 				if (event.key === "Enter" && !event.shiftKey && !isComposing) {
 					event.preventDefault()
-					onSend()
+          			onSend(inputValue, selectedImages, youtubeUrl); // Send youtubeUrl when Enter is pressed
 				}
 
 				if (event.key === "Backspace" && !isComposing) {
@@ -252,6 +265,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 				setInputValue,
 				justDeletedSpaceAfterMention,
 				queryItems,
+        youtubeUrl, // Added youtubeUrl to dependencies
 			],
 		)
 
@@ -321,19 +335,17 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					setShowContextMenu(false)
 
 					// Scroll to new cursor position
-					// https://stackoverflow.com/questions/29899364/how-do-you-scroll-to-the-position-of-the-cursor-in-a-textarea/40951875#40951875
 					setTimeout(() => {
 						if (textAreaRef.current) {
 							textAreaRef.current.blur()
 							textAreaRef.current.focus()
 						}
 					}, 0)
-					// NOTE: callbacks dont utilize return function to cleanup, but it's fine since this timeout immediately executes and will be cleaned up by the browser (no chance component unmounts before it executes)
 
 					return
 				}
 
-				const acceptedTypes = ["png", "jpeg", "webp"] // supported by anthropic and openrouter (jpg is just a file extension but the image will be recognized as jpeg)
+				const acceptedTypes = ["png", "jpeg", "webp"]
 				const imageItems = Array.from(items).filter((item) => {
 					const [type, subtype] = item.type.split("/")
 					return type === "image" && acceptedTypes.includes(subtype)
@@ -362,7 +374,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 					})
 					const imageDataArray = await Promise.all(imagePromises)
 					const dataUrls = imageDataArray.filter((dataUrl): dataUrl is string => dataUrl !== null)
-					//.map((dataUrl) => dataUrl.split(",")[1]) // strip the mime type prefix, sharp doesn't need it
 					if (dataUrls.length > 0) {
 						setSelectedImages((prevImages) => [...prevImages, ...dataUrls].slice(0, MAX_IMAGES_PER_MESSAGE))
 					} else {
@@ -394,7 +405,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 
 			highlightLayerRef.current.innerHTML = text
 				.replace(/\n$/, "\n\n")
-				.replace(/[<>&]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" })[c] || c)
+				.replace(/[<>&]/g, (c) => ({ "<": "<", ">": ">", "&": "&amp;" })[c] || c)
 				.replace(mentionRegexGlobal, '<mark class="mention-context-textarea-highlight">$&</mark>')
 
 			highlightLayerRef.current.scrollTop = textAreaRef.current.scrollTop
@@ -453,6 +464,12 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						}}
 					/>
 				)}
+        		<YouTubeUrlInput
+          			type="text"
+          			placeholder="Enter YouTube URL"
+          			value={youtubeUrl}
+          			onChange={(e) => setYoutubeUrl(e.target.value)}
+        		/>
 				<div
 					ref={highlightLayerRef}
 					style={{
@@ -515,7 +532,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						boxSizing: "border-box",
 						backgroundColor: "transparent",
 						color: "var(--vscode-input-foreground)",
-						//border: "1px solid var(--vscode-input-border)",
 						borderRadius: 2,
 						fontFamily: "var(--vscode-font-family)",
 						fontSize: "var(--vscode-editor-font-size)",
@@ -524,17 +540,6 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 						overflowX: "hidden",
 						overflowY: "scroll",
 						scrollbarWidth: "none",
-						// Since we have maxRows, when text is long enough it starts to overflow the bottom padding, appearing behind the thumbnails. To fix this, we use a transparent border to push the text up instead. (https://stackoverflow.com/questions/42631947/maintaining-a-padding-inside-of-text-area/52538410#52538410)
-						// borderTop: "9px solid transparent",
-						borderLeft: 0,
-						borderRight: 0,
-						borderTop: 0,
-						borderBottom: `${thumbnailsHeight + 6}px solid transparent`,
-						borderColor: "transparent",
-						// borderRight: "54px solid transparent",
-						// borderLeft: "9px solid transparent", // NOTE: react-textarea-autosize doesn't calculate correct height when using borderLeft/borderRight so we need to use horizontal padding instead
-						// Instead of using boxShadow, we use a div with a border to better replicate the behavior when the textarea is focused
-						// boxShadow: "0px 0px 0px 1px var(--vscode-input-border)",
 						padding: "9px 49px 3px 9px",
 						cursor: textAreaDisabled ? "not-allowed" : undefined,
 						flex: 1,
@@ -586,7 +591,7 @@ const ChatTextArea = forwardRef<HTMLTextAreaElement, ChatTextAreaProps>(
 							className={`input-icon-button ${textAreaDisabled ? "disabled" : ""} codicon codicon-send`}
 							onClick={() => {
 								if (!textAreaDisabled) {
-									onSend()
+                  					onSend(inputValue, selectedImages, youtubeUrl); // Send youtubeUrl when send button is clicked
 								}
 							}}
 							style={{ fontSize: 15 }}></div>

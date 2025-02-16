@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+import re
 from data_visualization import (
     visualize_sentiment_trends,
     create_word_cloud,
@@ -66,22 +67,77 @@ def get_video_metadata_route(video_id):
         return jsonify({"error": "Failed to fetch video metadata"}), 500
 
 
-@app.route("/api/comments")
 def get_comments_route():
-    video_id = request.args.get("videoId")
+    url_or_video_id = request.args.get("urlOrVideoId")
     max_results = request.args.get("maxResults", default=500, type=int)
+    video_id = None
+    if url_or_video_id:
+        # Regex to extract videoId from YouTube URL
+        match = re.search(r"(?:v=|\/embed\/|\/watch\?v=|\/shorts\/|youtu\.be\/)([\w-]{11})", url_or_video_id)
+        if match:
+            video_id = match.group(1)
+        else:
+            video_id = url_or_video_id  # Assume it's already a videoId
+
+    if not video_id:
+        return jsonify({"error": "No videoId or valid YouTube URL provided"}), 400
+
     comments = get_video_comments(video_id, comment_limit=max_results)
-    return jsonify(
-        [
-            {
-                "text": comment,
-                "author": "Unknown",
-                "timestamp": "Unknown",
-                "sentiment": "Unknown",
-            }
-            for comment in comments
-        ]
-    )
+    return jsonify(comments)
+
+@app.route("/api/comments/csv")
+def get_comments_csv_route():
+    video_id = request.args.get("urlOrVideoId")
+    max_results = request.args.get("maxResults", default=500, type=int)
+    video_id_extracted = None
+    if video_id:
+        match = re.search(r"(?:v=|\/embed\/|\/watch\?v=|\/shorts\/|youtu\.be\/)([\w-]{11})", video_id)
+        if match:
+            video_id_extracted = match.group(1)
+        else:
+            video_id_extracted = video_id
+
+    if not video_id_extracted:
+        return jsonify({"error": "No videoId or valid YouTube URL provided"}), 400
+
+    comments = get_video_comments(video_id_extracted, comment_limit=max_results)
+    
+    csv_filename = f"comments_{video_id_extracted}.csv"
+    csv_content = "Comment\\n"  # Header
+    for comment in comments:
+        csv_content += f"{comment['comment'].replace('\"', '').replace(',', ';')}\\n" # Basic CSV formatting, replace quotes and commas
+
+    return jsonify({"status": "success", "file": csv_filename, "csv_content": csv_content})
+
+
+@app.route("/api/sentiment-analysis")
+def get_sentiment_analysis_route():
+    video_id = request.args.get("urlOrVideoId")
+    max_results = request.args.get("maxResults", default=500, type=int)
+    video_id_extracted = None
+    if video_id:
+        match = re.search(r"(?:v=|\/embed\/|\/watch\?v=|\/shorts\/|youtu\.be\/)([\w-]{11})", video_id)
+        if match:
+            video_id_extracted = match.group(1)
+        else:
+            video_id_extracted = video_id
+
+    if not video_id_extracted:
+        return jsonify({"error": "No videoId or valid YouTube URL provided"}), 400
+
+    comments_data = get_video_comments(video_id_extracted, comment_limit=max_results)
+    if not comments_data or not isinstance(comments_data, list):
+        return jsonify({"error": "Failed to fetch comments for sentiment analysis"}), 500
+
+    sentiment_results = []
+    for comment_item in comments_data:
+        comment_text = comment_item.get('comment', '')
+        if comment_text:
+            # Basic sentiment analysis - replace with actual sentiment analysis logic later
+            sentiment = "positive" if len(comment_text) % 2 == 0 else "negative" # Placeholder
+            sentiment_results.append({"comment": comment_text, "sentiment": sentiment})
+
+    return jsonify({"status": "success", "sentiment_results": sentiment_results})
 
 
 if __name__ == "__main__":

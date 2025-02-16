@@ -10,6 +10,8 @@ import random
 
 logger = logging.getLogger(__name__)
 
+logging.basicConfig(level=logging.DEBUG, filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+
 
 def load_config():
     with open("config.json", "r") as f:
@@ -20,35 +22,59 @@ def authenticate_youtube_api(api_key):
     return {"Authorization": f"Bearer {api_key}"}
 
 
+    print("get_video_comments function called!")
+
 def get_video_comments(video_id, scrape_type="latest", comment_limit=500):
+    config = load_config()
+    api_key = config.get("youtube_api_key") # User provided API key
     api_service_name = "youtube"
     api_version = "v3"
     youtube = googleapiclient.discovery.build(
-        api_service_name, api_version, developerKey=API_KEY
+        api_service_name, api_version, developerKey=api_key
     )
+    logger.setLevel(logging.DEBUG)
+
 
     comments = []
     next_page_token = None
     total_comments = 0
 
     while total_comments < comment_limit:
-        request = youtube.commentThreads().list(
-            part="snippet",
-            videoId=video_id,
-            maxResults=min(100, comment_limit - total_comments),
-            pageToken=next_page_token,
-            order="time" if scrape_type == "latest" else "relevance",
-        )
-        response = request.execute()
+        logger.debug(f"Request parameters: {video_id=}, {scrape_type=}, {comment_limit=}, {next_page_token=}")
+
+        try:
+            request = youtube.commentThreads().list(
+                part="snippet",
+                videoId=video_id,
+                maxResults=min(100, comment_limit - total_comments),
+                pageToken=next_page_token,
+                order="time" if scrape_type == "latest" else "relevance",
+            )
+            response = request.execute()
+            print(f"Request URL: {request.uri}")
+            print(f"API Response: {response}")
+            logger.debug(f"API Response: {response}")
+            logger.debug(f"Request URL: {request.uri}")
+        except Exception as e:
+            logger.error(f"Error fetching comments: {e}")
+            return [] # Return empty list in case of error
+
 
         for item in response.get("items", []):
-            comment = item["snippet"]["topLevelComment"]["snippet"]["textDisplay"]
-            if scrape_type == "non_spam" and is_spam(comment):
+            snippet = item["snippet"]["topLevelComment"]["snippet"]
+            comment_text = snippet["textDisplay"]
+            comment_author = snippet["authorDisplayName"]
+            comment_time = snippet["publishedAt"]
+            if scrape_type == "non_spam" and is_spam(comment_text):
                 continue
-            comments.append(comment)
-            total_comments += 1
+            comments.append({
+                "text": comment_text,
+                "author": comment_author,
+                "timestamp": comment_time,
+            })
+        total_comments += len(response.get("items", []))
 
-        next_page_token = response.get("nextPageToken")
+
         if not next_page_token:
             break
 
@@ -125,10 +151,9 @@ def load_data_from_json(filename):
         return None
 
 
+
 def extract_video_id(url):
-    """
-    Extract the video ID from a YouTube URL.
-    """
+    """Extract the video ID from a YouTube URL."""
     if "v=" in url:
         return url.split("v=")[1].split("&")[0]
     elif "youtu.be/" in url:
@@ -138,9 +163,7 @@ def extract_video_id(url):
 
 
 def handle_user_feedback(feedback, sentiment_data):
-    """
-    Incorporate user feedback into the sentiment data.
-    """
+    """Incorporate user feedback into the sentiment data."""
     for item in feedback:
         comment_id = item.get("comment_id")
         corrected_sentiment = item.get("corrected_sentiment")
@@ -151,32 +174,16 @@ def handle_user_feedback(feedback, sentiment_data):
 
 
 def get_user_input(prompt):
-    """
-    Get user input from the command line.
-    """
+    """Get user input from the command line."""
     return input(prompt)
 
 
-def save_data_to_csv(data, filename):
-    """
-    Save data to a CSV file.
-    """
-    df = pd.DataFrame(data)
-    df.to_csv(filename, index=False)
-
-
-def get_user_friendly_input():
-    """
-    Get user-friendly input options for URLs and feedback.
-    """
-    url = get_user_input("Enter the YouTube URL: ")
-    feedback = get_user_input("Enter your feedback: ")
-    return url, feedback
-
-
-def save_data_to_csv(data, filename):
-    """
-    Save data to a CSV file.
-    """
-    df = pd.DataFrame(data)
-    df.to_csv(filename, index=False)
+if __name__ == "__main__":
+    video_id = "TcMBFSG5cAw"  # Avengers: Endgame Trailer
+    comments = get_video_comments(video_id, comment_limit=100)
+    if comments:
+        print(f"Scraped {len(comments)} comments from video ID: {video_id}")
+        # Save comments to test_comments.json
+        save_data_to_json(comments, "test_comments.json")
+    else:
+        print(f"Could not scrape comments from video ID: {video_id}")
