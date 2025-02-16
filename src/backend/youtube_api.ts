@@ -1,3 +1,4 @@
+import { SentimentIntensityAnalyzer } from "vaderSentiment";
 import axios, { AxiosError } from "axios";
 
 interface Comment {
@@ -145,62 +146,21 @@ const saveComments = async (comments: Comment[]) => {
   }
 };
 
-const fetchComments = async (
-  videoId: string,
-  maxResults: number = 100,
-  progressCallback?: (progress: number) => void
-): Promise<Comment[]> => {
-  let allComments: Comment[] = [];
-  let nextPageToken: string | undefined;
-  let totalResults = 0;
-  const maxPages = Math.ceil(maxResults / 100);
-  let currentPage = 0;
+import { getVideoMetadata } from "./video_metadata";
 
-  while (totalResults < maxResults && currentPage < maxPages) {
-    try {
-      currentPage++;
-      const url = "https://www.googleapis.com/youtube/v3/commentThreads";
-      const params = {
-        part: "snippet",
-        videoId: videoId,
-        maxResults: Math.min(100, maxResults - totalResults),
-        pageToken: nextPageToken,
-      };
-
-      const response: YouTubeAPIResponse = await fetchData(url, params);
-
-      if (response.items) {
-        const comments: Comment[] = response.items.map((item) => {
-          return {
-            text: item.snippet.topLevelComment.snippet.textDisplay,
-            author: item.snippet.topLevelComment.snippet.authorDisplayName,
-            timestamp: item.snippet.topLevelComment.snippet.publishedAt,
-          };
-        });
-        allComments.push(...comments);
-        totalResults += comments.length;
-      }
-
-      nextPageToken = response.nextPageToken;
-
-      if (progressCallback) {
-        progressCallback(Math.min(1, totalResults / maxResults));
-      }
-
-      if (!nextPageToken) {
-        break;
-      }
-    } catch (error: any) {
-      console.error("Error fetching comments:", error);
-      if (error.message.includes("API rate limit exceeded")) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        continue;
-      }
-      throw error;
-    }
+const analyzeCommentSentiment = (comment: string) => {
+  // Basic sentiment analysis using VADER
+  // Replace with more advanced analysis in later iterations
+  const sentiment = SentimentIntensityAnalyzer().polarity_scores(comment);
+  let overallSentiment;
+  if (sentiment.compound >= 0.05) {
+    overallSentiment = "positive";
+  } else if (sentiment.compound <= -0.05) {
+    overallSentiment = "negative";
+  } else {
+    overallSentiment = "neutral";
   }
-  await saveComments(allComments);
-  return allComments;
+  return overallSentiment;
 };
 
-export { fetchComments };
+export { fetchComments, analyzeCommentSentiment };

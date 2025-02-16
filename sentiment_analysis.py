@@ -74,19 +74,19 @@ def preprocess_comment(comment):
     # Tokenize the comment
     tokens = comment.split()
 
-    # Remove stop-words
-    tokens = [word for word in tokens if word not in stopwords.words("english")]
-
+    
+    #     # Remove stop-words
+    #     # tokens = [word for word in tokens if word not in stopwords.words("english")]
     # Correct spelling
-    tokens = [spell.correction(word) for word in tokens]
+    tokens = [spell.correction(word) for word in tokens if spell.correction(word) is not None]
 
-    # Lemmatize and stem the tokens
-    tokens = [lemmatizer.lemmatize(stemmer.stem(word)) for word in tokens]
+    # # Lemmatize and stem the tokens
+    # tokens = [lemmatizer.lemmatize(stemmer.stem(word)) for word in tokens]
 
-    # Handle negations
-    tokens = [
-        "not_" + word if word in ["not", "never", "no"] else word for word in tokens
-    ]
+    # # Handle negations
+    # tokens = [
+    #     "not_" + word if word in ["not", "never", "no"] else word for word in tokens
+    # ]
 
     return " ".join(tokens)
 
@@ -143,13 +143,9 @@ def perform_sentiment_analysis(text_inputs, language="en", labeled_dataset=None)
         preprocessed_text = preprocess_comment(input_text)
 
         if input_type == "transcript":
-            topic_results = categorize_comments_by_themes(
-                [input_text], text_type="transcript"
-            )
+            topic_results = {}
         else:
-            topic_results = categorize_comments_by_themes(
-                [input_text], text_type="comment"
-            )
+            topic_results = {}
 
         if sentiment_model == "vader":
             vader_result = vader_analyzer.polarity_scores(preprocessed_text)
@@ -251,13 +247,13 @@ def categorize_comments_by_themes(texts, text_type="comment"):
         )
 
     # Hierarchical clustering
-    clustering = AgglomerativeClustering(n_clusters=5)
-    clusters = clustering.fit_predict(embeddings)
+    # clustering = AgglomerativeClustering(n_clusters=5)
+    # clusters = clustering.fit_predict(embeddings)
 
     return {
         "lda_topics": lda_topics,
         "nmf_topics": nmf_topics,
-        "clusters": clusters,
+        "clusters": [],
         "text_type": text_type,
     }
 
@@ -343,82 +339,82 @@ def calculate_sentiment_influence(sentiment_data, influence_data):
     return sentiment_data
 
 
-def generate_dynamic_suggestions(sentiment_data):
-    suggestions = []
-    if sentiment_data.empty:
-        return suggestions
-
-    # Example suggestion: Identify comments with high negative sentiment
-    negative_comments = sentiment_data[
-        sentiment_data["vader_sentiment"].apply(lambda x: x["compound"] < -0.5)
-    ]
-    if not negative_comments.empty:
-        suggestions.append(
-            f"Identified {len(negative_comments)} comments with high negative sentiment."
-        )
-
-    # Example suggestion: Identify comments with high positive sentiment
-    positive_comments = sentiment_data[
-        sentiment_data["vader_sentiment"].apply(lambda x: x["compound"] > 0.5)
-    ]
-    if not positive_comments.empty:
-        suggestions.append(
-            f"Identified {len(positive_comments)} comments with high positive sentiment."
-        )
-
-    # Example suggestion: Identify comments with neutral sentiment
-    neutral_comments = sentiment_data[
-        sentiment_data["vader_sentiment"].apply(lambda x: abs(x["compound"]) <= 0.1)
-    ]
-    if not neutral_comments.empty:
-        suggestions.append(
-            f"Identified {len(neutral_comments)} comments with neutral sentiment."
-        )
-
-    # Example suggestion: Identify comments with high variance in sentiment
-    if "sentiment_variance" in sentiment_data.columns:
-        high_variance_comments = sentiment_data[
-            sentiment_data["sentiment_variance"] > 0.2
-        ]
-        if not high_variance_comments.empty:
-            suggestions.append(
-                f"Identified {len(high_variance_comments)} comments with high variance in sentiment."
-            )
-
-    # Example suggestion: Identify comments with sentiment shifts
-    if "sentiment_shift" in sentiment_data.columns:
-        significant_shifts = sentiment_data[
-            sentiment_data["sentiment_shift"].abs() > 0.3
-        ]
-        if not significant_shifts.empty:
-            suggestions.append(
-                f"Identified {len(significant_shifts)} comments with significant sentiment shifts."
-            )
-
-
-# Example suggestion: Identify potential manipulation or bias
-if (
-    "sentiment_shift" in sentiment_data.columns
-    and "sentiment_echo_chamber" in sentiment_data.columns
-):
-    biased_comments = sentiment_data[
-        (sentiment_data["sentiment_shift"].abs() > 0.3)
-        & (sentiment_data["sentiment_echo_chamber"] == True)
-    ]
-    if not biased_comments.empty:
-        suggestions.append(
-            f"Identified {len(biased_comments)} comments with significant sentiment shifts within echo chambers, which may indicate potential manipulation or bias."
-        )
-
-# Example suggestion: Identify potential echo chambers
-if "sentiment_echo_chamber" in sentiment_data.columns:
-    echo_chamber_comments = sentiment_data[
-        sentiment_data["sentiment_echo_chamber"] == True
-    ]
-    if not echo_chamber_comments.empty:
-        suggestions.append(
-            f"Identified {len(echo_chamber_comments)} comments within potential echo chambers."
-        )
+# def generate_dynamic_suggestions(sentiment_data):
+#     suggestions = []
+#     if sentiment_data.empty:
+#         return suggestions
+#
+#     # Example suggestion: Identify comments with high negative sentiment
+#     negative_comments = sentiment_data[
+#         sentiment_data["vader_sentiment"].apply(lambda x: x["compound"] < -0.5)
+#     ]
+#     if not negative_comments.empty:
+#         suggestions.append(
+#             f"Identified {len(negative_comments)} comments with high negative sentiment."
+#         )
+#
+#     # Example suggestion: Identify comments with high positive sentiment
+#     positive_comments = sentiment_data[
+#         sentiment_data["vader_sentiment"].apply(lambda x: x["compound"] > 0.5)
+#     ]
+#     if not positive_comments.empty:
+#         suggestions.append(
+#             f"Identified {len(positive_comments)} comments with high positive sentiment."
+#         )
+#
+#     # Example suggestion: Identify comments with neutral sentiment
+#     neutral_comments = sentiment_data[
+#         sentiment_data["vader_sentiment"].apply(lambda x: abs(x["compound"]) <= 0.1)
+#     ]
+#     if not neutral_comments.empty:
+#         suggestions.append(
+#             f"Identified {len(neutral_comments)} comments with neutral sentiment."
+#         )
+#
+#     # Example suggestion: Identify comments with high variance in sentiment
+#     if "sentiment_variance" in sentiment_data.columns:
+#         high_variance_comments = sentiment_data[
+#             sentiment_data["sentiment_variance"] > 0.2
+#         ]
+#         if not high_variance_comments.empty:
+#             suggestions.append(
+#                 f"Identified {len(high_variance_comments)} comments with high variance in sentiment."
+#             )
+#
+#     # Example suggestion: Identify comments with sentiment shifts
+#     if "sentiment_shift" in sentiment_data.columns:
+#         significant_shifts = sentiment_data[
+#             sentiment_data["sentiment_shift"].abs() > 0.3
+#         ]
+#         if not significant_shifts.empty:
+#             suggestions.append(
+#                 f"Identified {len(significant_shifts)} comments with significant sentiment shifts."
+#             )
+#
+#
+# # Example suggestion: Identify potential manipulation or bias
+# if (
+#     "sentiment_shift" in sentiment_data.columns
+#     and "sentiment_echo_chamber" in sentiment_data.columns
+# ):
+#     biased_comments = sentiment_data[
+#         (sentiment_data["sentiment_shift"].abs() > 0.3)
+#         & (sentiment_data["sentiment_echo_chamber"] == True)
+#     ]
+#     if not biased_comments.empty:
+#         suggestions.append(
+#             f"Identified {len(biased_comments)} comments with significant sentiment shifts within echo chambers, which may indicate potential manipulation or bias."
+#         )
+#
+# # Example suggestion: Identify potential echo chambers
+# if "sentiment_echo_chamber" in sentiment_data.columns:
+#     echo_chamber_comments = sentiment_data[
+#         sentiment_data["sentiment_echo_chamber"] == True
+#     ]
+#     if not echo_chamber_comments.empty:
+#         suggestions.append(
+#             f"Identified {len(echo_chamber_comments)} comments within potential echo chambers."
+#         )
 
 
 def generate_synthetic_dataset(num_samples: int = 1000) -> List[Dict[str, Any]]:
@@ -591,6 +587,7 @@ class SentimentAnalyzer:
                     "issue",
                     "problem",
                     "solution",
+                    "%",
                 ],
                 "positive_feedback": [
                     "great",
