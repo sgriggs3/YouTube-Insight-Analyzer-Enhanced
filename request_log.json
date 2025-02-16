@@ -1,0 +1,282 @@
+[
+  {
+    "timestamp": "2025-01-19T11:14:24.892Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:25.044Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0",
+    "error": "Request failed with status code 401"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:25.044Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:25.139Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0",
+    "error": "Request failed with status code 401"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:25.139Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:25.232Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0",
+    "error": "Request failed with status code 401"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:25.232Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:25.355Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0",
+    "error": "Request failed with status code 401"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:25.355Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:25.448Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0",
+    "error": "Request failed with status code 401"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:25.448Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:25.540Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0",
+    "error": "Request failed with status code 401"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:25.541Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:25.633Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0",
+    "error": "Request failed with status code 401"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:25.634Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyDW,Jm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:26.097Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0",
+    "error": "Request failed with status code 401"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:26.097Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:26.189Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0",
+    "error": "Request failed with status code 401"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:26.190Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0"
+  },
+  {
+    "timestamp": "2025-01-19T11:14:26.644Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0",
+    "error": "Request failed with status code 401"
+  },
+  {
+    "timestamp": "2025-01-19T11:18:18.530Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:countTokens",
+    "payload": {},
+    "apiKey": "AIzaSyCKFaJ_1EPvsfw6V00pdGEi__u8XfyapqA"
+  },
+  {
+    "timestamp": "2025-01-19T11:18:18.531Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyCKFaJ_1EPvsfw6V00pdGEi__u8XfyapqA",
+    "error": "\"[object Object]\" is not valid JSON"
+  },
+  {
+    "timestamp": "2025-01-19T11:18:40.490Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": {},
+    "apiKey": "AIzaSyCKFaJ_1EPvsfw6V00pdGEi__u8XfyapqA"
+  },
+  {
+    "timestamp": "2025-01-19T11:18:40.490Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyCKFaJ_1EPvsfw6V00pdGEi__u8XfyapqA",
+    "error": "\"[object Object]\" is not valid JSON"
+  },
+  {
+    "timestamp": "2025-01-19T11:23:37.407Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": {},
+    "apiKey": "AIzaSyDTCx9Zkaw8A_ncrAGAj9_6SjeOxQevBtc"
+  },
+  {
+    "timestamp": "2025-01-19T11:23:37.408Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyDTCx9Zkaw8A_ncrAGAj9_6SjeOxQevBtc",
+    "error": "\"[object Object]\" is not valid JSON"
+  },
+  {
+    "timestamp": "2025-01-19T11:25:22.165Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": {},
+    "apiKey": "AIzaSyCkGBEDGV4_ipy5uhe1uy94q3u7g_w2N3I"
+  },
+  {
+    "timestamp": "2025-01-19T11:25:22.167Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyCkGBEDGV4_ipy5uhe1uy94q3u7g_w2N3I",
+    "error": "\"[object Object]\" is not valid JSON"
+  },
+  {
+    "timestamp": "2025-01-19T11:26:54.167Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:countTokens",
+    "payload": {},
+    "apiKey": "AIzaSyCKFaJ_1EPvsfw6V00pdGEi__u8XfyapqA"
+  },
+  {
+    "timestamp": "2025-01-19T11:26:54.168Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyCKFaJ_1EPvsfw6V00pdGEi__u8XfyapqA",
+    "error": "\"[object Object]\" is not valid JSON"
+  },
+  {
+    "timestamp": "2025-01-19T11:27:08.522Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": {},
+    "apiKey": "AIzaSyDL5Za6UnrXtvoEVf-PbJtExiWVBAECoMg"
+  },
+  {
+    "timestamp": "2025-01-19T11:27:08.523Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyDL5Za6UnrXtvoEVf-PbJtExiWVBAECoMg",
+    "error": "\"[object Object]\" is not valid JSON"
+  },
+  {
+    "timestamp": "2025-01-19T11:29:47.511Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": {},
+    "apiKey": "AIzaSyCkGBEDGV4_ipy5uhe1uy94q3u7g_w2N3I"
+  },
+  {
+    "timestamp": "2025-01-19T11:29:47.652Z",
+    "type": "response",
+    "response": null,
+    "apiKey": "AIzaSyCkGBEDGV4_ipy5uhe1uy94q3u7g_w2N3I",
+    "error": "Request failed with status code 401"
+  },
+  {
+    "timestamp": "2025-01-20T00:00:00.000Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyA3VkLUoMxyG8e3q3HGa-CSw548txKtVQo"
+  },
+  {
+    "timestamp": "2025-01-20T00:00:00.000Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyAVqHaHBRos1lRKk5hi62mC9W7ssz3bzTw"
+  },
+  {
+    "timestamp": "2025-01-20T00:00:00.000Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyDTCx9Zkaw8A_ncrAGAj9_6SjeOxQevBtc"
+  },
+  {
+    "timestamp": "2025-01-20T00:00:00.000Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyDWJm1cjj7dgLlPBtkXTmmU1Fsj_suGMv0"
+  },
+  {
+    "timestamp": "2025-01-20T00:00:00.000Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyBFKq4XRb505EOdPiy3O7Gt3D192siUr30"
+  },
+  {
+    "timestamp": "2025-01-20T00:00:00.000Z",
+    "type": "request",
+    "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent",
+    "payload": "{}",
+    "apiKey": "AIzaSyA_rZoxcgGK_7H-lTMzV5oJqoU_vrZfSSc"
+  }
+]

@@ -17,7 +17,7 @@ const wsServer = new WebSocketServer({
   autoAcceptConnections: false,
 });
 
-import { fetchComments } from "./backend/youtube_api";
+import { fetchComments, analyzeCommentSentiment } from "./backend/youtube_api";
 
 export { app, wsServer };
 
@@ -33,7 +33,12 @@ app.get("/api/comments", async (req, res) => {
     const comments = await fetchComments(videoId, maxResults, (progress) => {
       console.log(`Scraping progress: ${progress * 100}%`);
     });
-    res.send(comments);
+    res.send(
+      comments.map((comment) => ({
+        ...comment,
+        sentiment: analyzeCommentSentiment(comment.text),
+      }))
+    );
   } catch (error: any) {
     console.error("Error fetching comments:", error);
     res
@@ -78,4 +83,20 @@ app.get("/api/truth", (req, res) => {
   res.send({
     message: "Truth/objectivity analysis API endpoint not yet implemented",
   });
+});
+
+app.get("/api/video-metadata/:videoId", async (req, res) => {
+  const videoId = req.params.videoId;
+  try {
+    const metadata = await getVideoMetadata(videoId);
+    res.send(metadata);
+  } catch (error: any) {
+    console.error("Error fetching video metadata:", error);
+    res
+      .status(500)
+      .send({
+        message: "Failed to fetch video metadata",
+        error: error.message,
+      });
+  }
 });
