@@ -46,3 +46,4 @@ FLASK_APP = "run.py"
 FLASK_ENV = "development"
 FLASK_DEBUG = True
 YOUTUBE_API_KEY = "your_api_key_here"
+
