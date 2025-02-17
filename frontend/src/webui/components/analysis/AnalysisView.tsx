@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { vscode } from "../../utils/vscode";
 import { VSCodeProgressRing } from "@vscode/webview-ui-toolkit/react";
+import { SentimentChart } from "../visualization/SentimentChart";
 
 interface VideoMetadata {
   title: string;
@@ -33,6 +34,7 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ videoId, onDone }) => {
   const [progress, setProgress] = useState(0);
   const [progressMessage, setProgressMessage] = useState("");
   const [comments, setComments] = useState<Comment[]>([]);
+  const [sentimentData, setSentimentData] = useState<any[]>([]);
 
   const handleRetry = useCallback(() => {
     setRetryCount((count) => count + 1);
@@ -86,6 +88,18 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ videoId, onDone }) => {
       }
       const comments = await response.json();
       setComments(comments);
+
+      // Perform sentiment analysis
+      const sentimentResponse = await fetch(
+        `/api/sentiment-analysis?urlOrVideoId=${videoId}`
+      );
+      if (!sentimentResponse.ok) {
+        throw new Error(
+          `Failed to perform sentiment analysis: ${sentimentResponse.status} ${sentimentResponse.statusText}`
+        );
+      }
+      const sentimentData = await sentimentResponse.json();
+      setSentimentData(sentimentData);
     } catch (error) {
       console.error("Error scraping comments:", error);
     }
@@ -205,6 +219,8 @@ const AnalysisView: React.FC<AnalysisViewProps> = ({ videoId, onDone }) => {
           {progress}% - {progressMessage}
         </div>
       </div>
+      <h2>Sentiment Trends</h2>
+      <SentimentChart data={sentimentData} />
     </div>
   );
 };
