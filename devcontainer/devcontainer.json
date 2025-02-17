@@ -12,8 +12,8 @@
     "esbenp.prettier-vscode"
   ],
   "postCreateCommand": "pip install -r requirements.txt && python -m nltk.downloader punkt vader_lexicon",
-  "postStartCommand": "flask run --host=0.0.0.0 --port=8080",
-  "forwardPorts": [8080],
+  "postStartCommand": "flask run --host=0.0.0.0 --port=5000",
+  "forwardPorts": [5000],
   "containerEnv": {
     "GEMINI_API_KEY": "${{ secrets.GEMINI_API_KEY }}"
   },
