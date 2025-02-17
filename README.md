@@ -175,13 +175,13 @@ The following tasks are prioritized to ensure the most efficient development pro
 - Add a feature to analyze video educational content.
 - Implement a feature to analyze video how-to guides.
 - Add a feature to analyze video DIY projects.
-- Implement a feature to analyze video cooking.
-- Add a feature to analyze video travel.
-- Implement a feature to analyze video fitness.
-- Add a feature to analyze video health.
-- Implement a feature to analyze video beauty.
-- Add a feature to analyze video fashion.
-- Implement a feature to analyze video art.
+- Add a feature to analyze video cooking.
+- Implement a feature to analyze video travel.
+- Add a feature to analyze video fitness.
+- Implement a feature to analyze video health.
+- Add a feature to analyze video beauty.
+- Implement a feature to analyze video fashion.
+- Add a feature to analyze video art.
 - Implement a feature to analyze video music.
 - Add a feature to analyze video dance.
 - Implement a feature to analyze video comedy.
@@ -672,6 +672,49 @@ This will generate a sentiment distribution analysis chart and save it as an HTM
      },
      "extensions": ["ms-python.python", "ms-toolsai.jupyter"],
      "postCreateCommand": "pip install -r requirements.txt",
+     "postStartCommand": "python -m nltk.downloader punkt vader_lexicon",
+     "forwardPorts": [5000],
      "remoteUser": "vscode"
    }
    ```
+
+3. **Install Dependencies**:
+
+   - Ensure all necessary dependencies are listed in the `requirements.txt` and `frontend/package.json` files.
+   - Run the following commands to install the dependencies:
+
+     ```bash
+     pip install -r requirements.txt
+     cd frontend && npm install
+     ```
+
+4. **Start the Development Server**:
+
+   - Use the `start:dev` script in `package.json` to start both the frontend and backend services:
+
+     ```bash
+     npm run start:dev
+     ```
+
+5. **Access the Application**:
+
+   - The application should now be accessible via the forwarded ports configured in the `devcontainer.json` file.
+   - Open the provided URL to access the frontend and backend services.
+
+6. **Test the Deployment**:
+
+   - Verify that both the frontend and backend are working together by testing the deployment locally.
+   - Ensure that the YouTube comments scraping and other features are functioning as expected.
+
+7. **Optimize for GitHub Codespaces**:
+
+   - Use the `.github/codespaces-prebuilds/main.yaml` file to set up prebuilds for faster startup times.
+   - Ensure environment variables are securely set using GitHub secrets in the `devcontainer.json` file.
+   - Configure port forwarding in `devcontainer.json` to allow access to the frontend and backend services.
+
+8. **Update Documentation**:
+
+   - Ensure the `README.md` file includes instructions for setting up and running the project in GitHub Codespaces.
+   - Provide clear and concise steps for installing dependencies, starting services, and accessing the application.
+
+By following these steps, you can set up and configure the YouTube Insight Analyzer project in GitHub Codespaces, ensuring a smooth development experience and efficient deployment process.

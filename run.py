@@ -142,4 +142,9 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except ValueError as e:
+        logger.error(f"ValueError encountered: {e}")
+        if "numpy.dtype size changed" in str(e):
+            logger.error("This error may indicate binary incompatibility. Please check your numpy installation.")
